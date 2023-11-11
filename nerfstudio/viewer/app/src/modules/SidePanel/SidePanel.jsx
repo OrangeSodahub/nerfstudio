@@ -8,6 +8,7 @@ import Divider from '@mui/material/Divider';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import {
+  BedroomBaby,
   CameraAltRounded,
   TuneRounded,
   WidgetsRounded,
@@ -19,6 +20,7 @@ import CameraPanel from './CameraPanel';
 import ScenePanel from './ScenePanel';
 import { RenderControls } from '../ConfigPanel/ConfigPanel';
 import ExportPanel from './ExportPanel';
+import LayoutPanel from './LayoutPanel';
 
 export const snap_to_camera = (sceneTree, camera, matrix) => {
   const mat = new THREE.Matrix4();
@@ -103,20 +105,11 @@ function PanelContents(props: PanelContentsProps) {
           aria-label="panel tabs"
           centered
         >
-          <Tab icon={<TuneRounded />} label="Controls" {...a11yProps(0)} />
-          <Tab icon={<CameraAltRounded />} label="Render" {...a11yProps(1)} />
-          <Tab
-            icon={<WidgetsRounded />}
-            label="Scene"
-            disabled={camera_choice === 'Render Camera'}
-            {...a11yProps(2)}
-          />
-          <Tab
-            icon={<ImportExportRounded />}
-            label="Export"
-            disabled={camera_choice === 'Render Camera'}
-            {...a11yProps(3)}
-          />
+          <Tab icon={<BedroomBaby />} label="Layouts" {...a11yProps(0)} />
+          <Tab icon={<TuneRounded />} label="Controls" {...a11yProps(1)} />
+          <Tab icon={<CameraAltRounded />} label="Render" {...a11yProps(2)} />
+          <Tab icon={<WidgetsRounded />} label="Scene" disabled={camera_choice === 'Render Camera'} {...a11yProps(3)} />
+          <Tab icon={<ImportExportRounded />} label="Export" disabled={camera_choice === 'Render Camera'} {...a11yProps(4)} />
         </Tabs>
       </Box>
 
@@ -143,6 +136,7 @@ export function BasicTabs(props: BasicTabsProps) {
       <Divider />
       <Box sx={{ width: '100%' }}>
         <PanelContents>
+          <LayoutPanel sceneTree={sceneTree} />
           <RenderControls />
           <CameraPanel sceneTree={sceneTree} />
           <ScenePanel sceneTree={sceneTree} />
