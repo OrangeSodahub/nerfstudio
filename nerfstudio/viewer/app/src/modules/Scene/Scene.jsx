@@ -6,7 +6,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { useDispatch } from 'react-redux';
-import { drawCamera, drawSceneBox} from './drawing';
+import { drawCamera, drawLayout, drawSceneBox} from './drawing';
 
 import { CameraHelper } from '../SidePanel/CameraPanel/CameraHelper';
 import SceneNode from '../../SceneNode';
@@ -17,6 +17,7 @@ import variables from '../../index.scss';
 
 const SCENE_BOX_NAME = 'Scene Box';
 const CAMERAS_NAME = 'Training Cameras';
+const LAYOUTS_NAME = 'Layouts';
 
 export function get_scene_tree() {
   const scene = new THREE.Scene();
@@ -294,6 +295,36 @@ export function get_scene_tree() {
     }
   };
   subscribe_to_changes(selector_fn_cameras, fn_value_cameras);
+
+  // draw layouts
+  // TODO: this is not used now
+  // const selector_fn_layouts = (state) => {
+  //   return state.sceneState.layouts;
+  // };
+  // const fn_value_layouts = (previous, current) => {
+  //   if (current !== null) {
+  //     let prev = new Set();
+  //     if (previous !== null) {
+  //       prev = new Set(Object.keys(previous));
+  //     }
+  //     const curr = new Set(Object.keys(current));
+  //     for (const key of curr) {
+  //       if (!prev.has(key)) {
+  //         const json = current[key];
+  //         const layout = drawLayout(json, key);
+  //         sceneTree.set_object_from_path([LAYOUTS_NAME, key], layout)
+  //       }
+  //     }
+  //     for (const key of prev) {
+  //       if (!curr.has(key) || current[key] == null) {
+  //         sceneTree.delete([LAYOUTS_NAME, key]);
+  //       }
+  //     }
+  //   } else {
+  //     sceneTree.delete([LAYOUTS_NAME]);
+  //   }
+  // };
+  // subscribe_to_changes(selector_fn_layouts, fn_value_layouts);
 
   // Check for clicks on training cameras
   const mouseVector = new THREE.Vector2();

@@ -163,3 +163,27 @@ export function drawCameras(cameras): Record<number, THREE.Object3D> {
   }
   return cameraObjects;
 }
+
+export function drawLayout(category: String): THREE.Object3D {
+
+  const categorySettings = {
+    wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffffff },
+    floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0xff0000 },
+    cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x00ff00 },
+  };
+
+  const {size, color} = categorySettings[category];
+  console.log('size: ', size, 'color: ', color)
+
+  const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6 });
+  const layoutObject = new THREE.Mesh(geometry, material);
+
+  const edges = new THREE.EdgesGeometry(geometry);
+  const edgesMaterial = new THREE.LineBasicMaterial({ color, transparent: false });
+  const edgeMesh = new THREE.LineSegments(edges, edgesMaterial);
+
+  layoutObject.add(edgeMesh);
+
+  return layoutObject;
+}
