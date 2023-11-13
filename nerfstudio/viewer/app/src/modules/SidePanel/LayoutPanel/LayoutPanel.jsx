@@ -337,9 +337,19 @@ export default function LayoutPanel(props) {
           {addButtonEnabled ? 'Add layout' : 'Click one category'}
         </Button>
         <div>
-          {Object.entries(categoryCounts).map(([category, count]) => (
-            <p key={category}>{`${category} count: ${count}`}</p>
-          ))}
+          {Object.keys(categoryCounts).length === 0 ? (
+            <p style={{ textAlign: 'left', paddingLeft: '10px' }}>
+              There is no object in current scene.</p>
+          ) : (
+            <p style={{ textAlign: 'left', paddingLeft: '10px' }}>
+              There
+              {Object.values(categoryCounts).reduce((total, count) => total + count, 0) === 1 ? 'is ' : 'are '}
+              {Object.entries(categoryCounts)
+                .map(([category, count]) => `${count} \u00d7 ${category}`)
+                .join(', ')}
+              in current scene.
+            </p>
+          )}
         </div>
         <div className="LayoutList-container">
           <LayoutList
