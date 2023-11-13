@@ -185,5 +185,10 @@ export function drawLayout(category: String): THREE.Object3D {
 
   layoutObject.add(edgeMesh);
 
+  // add `size` attribute in order to change them
+  layoutObject.originalSize = size.clone();
+  layoutObject.size = size;
+  layoutObject.opacity = 0.6;
+
   return layoutObject;
 }

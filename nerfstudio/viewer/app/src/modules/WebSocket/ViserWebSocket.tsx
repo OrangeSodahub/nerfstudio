@@ -1,9 +1,10 @@
+// @ts-nocheck
 import React, { useEffect, MutableRefObject, Dispatch } from 'react';
 import AwaitLock from 'await-lock';
 import { pack, unpack } from 'msgpackr';
 import { useDispatch, useStore, useSelector } from 'react-redux';
 import { Store } from 'redux';
-import {MathUtils} from 'three';
+import { MathUtils } from 'three';
 import { Message } from './ViserMessages';
 import SceneNode from '../../SceneNode';
 

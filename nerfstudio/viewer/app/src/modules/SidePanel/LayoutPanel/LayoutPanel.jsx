@@ -1,9 +1,16 @@
 import * as React from 'react';
+import * as THREE from 'three';
 import { Delete, KeyboardArrowUp, KeyboardArrowDown, ExpandMore, Edit, Visibility } from '@mui/icons-material';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
-import { Accordion, AccordionSummary, Button, TextField, Stack } from '@mui/material';
+import { Accordion, AccordionSummary, Button, TextField, Stack, Slider, AccordionDetails, Typography } from '@mui/material';
 import AddBoxRoundedIcon from '@mui/icons-material/AddBoxRounded';
 import { drawLayout } from '../../Scene/drawing';
+import {
+  ViserWebSocketContext,
+  sendWebsocketMessage,
+  makeThrottledMessageSender,
+} from '../../WebSocket/ViserWebSocket';
 
 interface ClassItemProps {
   category: String;
@@ -59,6 +66,22 @@ function LayoutList(props) {
     event: React.SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? layoutUUID : false);
     };
+
+  const handleSizeChange = (dimension, index, value) => {
+    setLayouts((prevLayouts) => {
+      const newLayouts = [...prevLayouts];
+      const layout = newLayouts[index];
+      const scaleX = dimension === 'x' ? value : layout.size.x / layout.originalSize.x;
+      const scaleY = dimension === 'y' ? value : layout.size.y / layout.originalSize.y;
+      const scaleZ = dimension === 'z' ? value : layout.size.z / layout.originalSize.z;
+      layout.scale.set(scaleX, scaleY, scaleZ);
+      const newSize = new THREE.Vector3(scaleX * layout.originalSize.x,
+                                        scaleY * layout.originalSize.y,
+                                        scaleZ * layout.originalSize.z);
+      layout.size = newSize;
+      return newLayouts;
+    });
+  }
 
   const delete_layout = (index) => {
     console.log('Deleting layout: ', index);
@@ -141,21 +164,9 @@ function LayoutList(props) {
                 layoutProps.get(layout.uuid).set('NAME', e.target.value);
                 setLayoutProperties(layoutProps);
               }}
-              sx={{
-                alignItems: 'center',
-                alignContent: 'center',
-              }}
+              sx={{alignItems: 'center', alignContent: 'center'}}
             />
-            <TextField
-              id="standard-basic"
-              value={layout.properties.get('CATEGORY')}
-              variant="standard"
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                alignItems: 'center',
-                alignContent: 'center',
-              }}
-            />
+            <Typography style={{ textTransform: 'lowercase' }}>({layout.properties.get('CATEGORY')})</Typography>
           </Button>
           <Button
             size="small"
@@ -180,6 +191,41 @@ function LayoutList(props) {
             </Button>
           </Stack>
         </AccordionSummary>
+        <AccordionDetails>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Typography style={{ marginRight: '10px' }}>Scale(X)</Typography>
+            <Slider
+              value={layout.size.x / layout.originalSize.x}
+              onChange={(event, value) => handleSizeChange('x', index, value)}
+              aria-labelledby={`size-x-slider-${index}`}
+              valueLabelDisplay="auto"
+              min={0.1} max={2} step={0.02}
+            />
+            <Typography style={{ marginLeft: '10px' }}>{(layout.size.x / layout.originalSize.x).toFixed(1)}</Typography>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Typography style={{ marginRight: '10px' }}>Scale(Y)</Typography>
+            <Slider
+              value={layout.size.y / layout.originalSize.y}
+              onChange={(event, value) => handleSizeChange('y', index, value)}
+              aria-labelledby={`size-y-slider-${index}`}
+              valueLabelDisplay="auto"
+              min={0.1} max={2} step={0.02}
+            />
+            <Typography style={{ marginLeft: '10px' }}>{(layout.size.y / layout.originalSize.y).toFixed(1)}</Typography>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Typography style={{ marginRight: '10px' }}>Scale(Z)</Typography>
+            <Slider
+              value={layout.size.z / layout.originalSize.z}
+              onChange={(event, value) => handleSizeChange('z', index, value)}
+              aria-labelledby={`size-z-slider-${index}`}
+              valueLabelDisplay="auto"
+              min={0.1} max={2} step={0.02}
+            />
+            <Typography style={{ marginLeft: '10px' }}>{(layout.size.z / layout.originalSize.z).toFixed(1)}</Typography>
+          </div>
+        </AccordionDetails>
       </Accordion>
     );
   });
@@ -187,13 +233,19 @@ function LayoutList(props) {
 }
 
 export default function LayoutPanel(props) {
+  const categories = [
+    'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
+    'door', 'window', 'bokshelf', 'counter', 'desk']
+
   const sceneTree = props.sceneTree;
+  const viser_websocket = React.useContext(ViserWebSocketContext);
   const transform_controls = sceneTree.find_object_no_create([
     'Transform Controls',
   ]);
 
   // react state
   const [layouts, setLayouts] = React.useState([]);
+  const [id, setId] = React.useState(0);
   // Mapping of layout id to each layout's properties
   const [layoutProperties, setLayoutProperties] = React.useState(new Map());
 
@@ -215,16 +267,19 @@ export default function LayoutPanel(props) {
     setCategoryCounts((prevCounts) => ({...prevCounts,
       [selectedCategory]: (prevCounts[selectedCategory] || 0) + 1,
     }));
+    const cat_id = categories.findIndex(item => item === selectedCategory.toLowerCase());
     const new_layout = drawLayout(selectedCategory);
     const new_layout_properties = new Map();
     new_layout.properties = new_layout_properties;
-    new_layout_properties.set('NAME', `idx.${layouts.length}`);
+    new_layout_properties.set('NAME', `idx.${id}`);
     new_layout_properties.set('CATEGORY', `${selectedCategory}`)
+    new_layout_properties.set('CAT_ID', `${cat_id}`)
     const new_properties = new Map(layoutProperties);
     setLayoutProperties(new_properties);
 
     const new_layout_list = layouts.concat(new_layout);
     setLayouts(new_layout_list);
+    setId(id + 1)
   };
 
   const swapLayouts = (index, new_index) => {
@@ -298,26 +353,90 @@ export default function LayoutPanel(props) {
     // eslint-disable-next-line react-hooks.exhaustive-deps
   }, [layouts, layoutProperties]);
 
-  // TODO: finish this
-  // const get_layout_set = () => {
-  //   const layout_set = [];
-  // }
+  const handleOpacityChange = (event, value) => {
+    setLayouts((prevLayouts) => {
+      const newLayouts = prevLayouts.map((layout) => {
+        const color = layout.material.color
+        layout.material = new THREE.MeshBasicMaterial({color, transparent: true, opacity: value});
+        layout.opacity = value;
+        return layout;
+      });
+      return newLayouts;
+    });
+  };
   
-  // const export_layout_set = () => {
-  //   // export the layout set
-  //   sendWebsocketMessage(viser_websocket, { type: 'SaveCheckpointMessage' });
-  //   const layout_set_object = get_layout_set();
-  //   console.log()
-  // };
+  // TODO: finish this
+  const get_layout_set = () => {
+    const coords = [];
+    const sizes = [];
+    const cat_ids = [];
+  
+    for (let i = 0; i < layouts.length; i += 1) {
+      const layout = layouts[i];
+      const size = [ layout.size.x, layout.size.y, layout.size.z ];
+      const cat_id = layout.properties.get('CAT_ID');
+      sizes.push(size);
+      cat_ids.push(cat_id);
+    }
+  
+    const layout_set_object = {
+      coords,
+      sizes,
+      cat_ids,
+    };
+    return layout_set_object;
+  };
+  
+  const export_layout_set = () => {
+    // export the layout set
+    sendWebsocketMessage(viser_websocket, { type: 'SaveCheckpointMessage' });
+    const layout_set_object = get_layout_set();
+    console.log()
+  
+    const json = JSON.stringify(layout_set_object, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const href = URL.createObjectURL(blob);
+  
+    const link = document.createElement('a');
+    link.href = href;
+  
+    const filname = 'layout_set_json';
+    link.download = filname;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
+  };
 
-  // const load_layout_set = (layout_set_object) => {
-  //   const new_layout_list = [];
-  //   const new_properties = new Map(layoutProperties);
-  // };
+  const load_layout_set = (layout_set_object) => {
+    const new_layout_list = [];
+    const new_properties = new Map(layoutProperties);
+  
+    const { coords, sizes, cat_ids } = layout_set_object;
+  
+    for (let i = 0; i < coords.length; i += 1) {
+      const coord = coords[i];
+      const size = sizes[i];
+      const cat_id = cat_ids[i];
 
-  const categories = [
-    'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
-    'door', 'window', 'bokshelf', 'counter', 'desk']
+      const category = categories[cat_id];
+      setSelectedCategory(category)
+      // TODO: support initial values
+      add_layout();
+    }
+  };
+
+  const uploadLayoutSet = (e) => {
+    const fileUpload = e.target.files[0];
+  
+    const fr = new FileReader();
+    fr.onload = (res) => {
+      const layout_set_object = JSON.parse(res.target.result);
+      load_layout_set(layout_set_object);
+    };
+  
+    fr.readAsText(fileUpload);
+  };
 
   return (
       <div className="LayoutPanel">
@@ -328,27 +447,52 @@ export default function LayoutPanel(props) {
             onCategoryClick={handleCategoryClick}
             selected={selectedCategory && selectedCategory === category} />
         ))}
-        <Button
-          varient="outlined"
-          startIcon={<AddBoxRoundedIcon />}
-          onClick={add_layout}
-          disabled={!addButtonEnabled}
-        >
-          {addButtonEnabled ? 'Add layout' : 'Click one category'}
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button
+            varient="outlined"
+            startIcon={<AddBoxRoundedIcon />}
+            onClick={add_layout}
+            disabled={!addButtonEnabled}
+          >
+            {addButtonEnabled ? 'Add layout' : 'Select one'}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<FileDownloadOutlinedIcon />}
+            onClick={export_layout_set}
+            disabled={layouts.length === 0}
+          >
+            Export Layouts
+          </Button>
+        </div>
         <div>
           {Object.keys(categoryCounts).length === 0 ? (
             <p style={{ textAlign: 'left', paddingLeft: '10px' }}>
               There is no object in current scene.</p>
           ) : (
             <p style={{ textAlign: 'left', paddingLeft: '10px' }}>
-              There
+              {'There '}
               {Object.values(categoryCounts).reduce((total, count) => total + count, 0) === 1 ? 'is ' : 'are '}
               {Object.entries(categoryCounts)
                 .map(([category, count]) => `${count} \u00d7 ${category}`)
                 .join(', ')}
-              in current scene.
+              {' in current scene'}.
             </p>
+          )}
+        </div>
+        <div>
+          {layouts.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Typography style={{ marginLeft: '20px', marginRight: '10px' }}>Opacity</Typography>
+              <Slider
+                value={layouts[0].opacity}
+                onChange={handleOpacityChange}
+                aria-labelledby="opacity-slider"
+                valueLabelDisplay="auto"
+                min={0} max={1} step={0.01}
+              />
+              <Typography style={{ marginLeft: '10px', marginRight: '20px' }}>{layouts[0].opacity.toFixed(1)}</Typography>
+            </div>
           )}
         </div>
         <div className="LayoutList-container">
