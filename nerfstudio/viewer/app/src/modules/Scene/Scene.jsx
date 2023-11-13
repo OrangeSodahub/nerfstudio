@@ -6,7 +6,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { useDispatch } from 'react-redux';
-import { drawCamera, drawLayout, drawSceneBox} from './drawing';
+import { drawCamera, drawSceneBox} from './drawing';
 
 import { CameraHelper } from '../SidePanel/CameraPanel/CameraHelper';
 import SceneNode from '../../SceneNode';
@@ -17,7 +17,6 @@ import variables from '../../index.scss';
 
 const SCENE_BOX_NAME = 'Scene Box';
 const CAMERAS_NAME = 'Training Cameras';
-const LAYOUTS_NAME = 'Layouts';
 
 export function get_scene_tree() {
   const scene = new THREE.Scene();

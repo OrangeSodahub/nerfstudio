@@ -15,7 +15,7 @@ from nerfstudio.viewer.server.viewer_state import ViewerState
 class ConfigLayout:
     """Config layout."""
 
-    load_config: Path
+    # load_config: Path
     """Path to config YAML file."""
     viewer: ViewerConfig = ViewerConfig()
     """Viewer configuration"""
@@ -30,7 +30,7 @@ def _start_viewer(config: ViewerConfig):
 
     viewer_log_path = Path(config.relative_log_filename)
     viewer_state = ViewerState(
-        config, log_filename=viewer_log_path)
+        config, log_filename=viewer_log_path, datapath=Path('.'))
     banner_messages = [f"Viewer at: {viewer_state.viewer_url}"]
 
     # We don't need logging, but writer.GLOBAL_BUFFER needs to be populated

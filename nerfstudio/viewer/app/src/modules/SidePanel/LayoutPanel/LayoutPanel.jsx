@@ -9,7 +9,6 @@ import { drawLayout } from '../../Scene/drawing';
 import {
   ViserWebSocketContext,
   sendWebsocketMessage,
-  makeThrottledMessageSender,
 } from '../../WebSocket/ViserWebSocket';
 
 interface ClassItemProps {
@@ -350,16 +349,16 @@ export default function LayoutPanel(props) {
         layout,
       );
     }
-    // eslint-disable-next-line react-hooks.exhaustive-deps
   }, [layouts, layoutProperties]);
 
   const handleOpacityChange = (event, value) => {
     setLayouts((prevLayouts) => {
       const newLayouts = prevLayouts.map((layout) => {
         const color = layout.material.color
-        layout.material = new THREE.MeshBasicMaterial({color, transparent: true, opacity: value});
-        layout.opacity = value;
-        return layout;
+        const new_layout = layout
+        new_layout.material = new THREE.MeshBasicMaterial({color, transparent: true, opacity: value});
+        new_layout.opacity = value;
+        return new_layout;
       });
       return newLayouts;
     });
@@ -408,35 +407,35 @@ export default function LayoutPanel(props) {
     URL.revokeObjectURL(href);
   };
 
-  const load_layout_set = (layout_set_object) => {
-    const new_layout_list = [];
-    const new_properties = new Map(layoutProperties);
+  // const load_layout_set = (layout_set_object) => {
+  //   const new_layout_list = [];
+  //   const new_properties = new Map(layoutProperties);
   
-    const { coords, sizes, cat_ids } = layout_set_object;
+  //   const { coords, sizes, cat_ids } = layout_set_object;
   
-    for (let i = 0; i < coords.length; i += 1) {
-      const coord = coords[i];
-      const size = sizes[i];
-      const cat_id = cat_ids[i];
+  //   for (let i = 0; i < coords.length; i += 1) {
+  //     const coord = coords[i];
+  //     const size = sizes[i];
+  //     const cat_id = cat_ids[i];
 
-      const category = categories[cat_id];
-      setSelectedCategory(category)
-      // TODO: support initial values
-      add_layout();
-    }
-  };
+  //     const category = categories[cat_id];
+  //     setSelectedCategory(category)
+  //     // TODO: support initial values
+  //     add_layout();
+  //   }
+  // };
 
-  const uploadLayoutSet = (e) => {
-    const fileUpload = e.target.files[0];
+  // const uploadLayoutSet = (e) => {
+  //   const fileUpload = e.target.files[0];
   
-    const fr = new FileReader();
-    fr.onload = (res) => {
-      const layout_set_object = JSON.parse(res.target.result);
-      load_layout_set(layout_set_object);
-    };
+  //   const fr = new FileReader();
+  //   fr.onload = (res) => {
+  //     const layout_set_object = JSON.parse(res.target.result);
+  //     load_layout_set(layout_set_object);
+  //   };
   
-    fr.readAsText(fileUpload);
-  };
+  //   fr.readAsText(fileUpload);
+  // };
 
   return (
       <div className="LayoutPanel">

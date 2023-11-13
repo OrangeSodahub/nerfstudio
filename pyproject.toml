@@ -122,7 +122,7 @@ ns-render = "nerfstudio.scripts.render:entrypoint"
 ns-export = "nerfstudio.scripts.exporter:entrypoint"
 ns-dev-test = "nerfstudio.scripts.github.run_actions:entrypoint"
 ns-dev-sync-viser-message-defs = "nerfstudio.scripts.viewer.sync_viser_message_defs:entrypoint"
-ns-configure-layout = "nerfstudio.scripts.scripts.configure_layout:entrypoint"
+ns-configure-layout = "nerfstudio.scripts.configure_layout:entrypoint"
 
 [options]
 # equivalent to using --extra-index-url with pip, which is needed for specifying the CUDA version torch and torchvision
