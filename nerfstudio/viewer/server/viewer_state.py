@@ -38,21 +38,21 @@ from nerfstudio.utils.writer import GLOBAL_BUFFER, EventName
 from nerfstudio.viewer.server import viewer_utils
 from nerfstudio.viewer.server.control_panel import ControlPanel
 from nerfstudio.viewer.server.gui_utils import parse_object
-from nerfstudio.viewer.server.render_state_machine import RenderAction, RenderStateMachine
-from nerfstudio.viewer.server.utils import get_intrinsics_matrix_and_camera_to_world_h
-from nerfstudio.viewer.server.viewer_elements import ViewerControl, ViewerElement
+from nerfstudio.viewer.server.render_state_machine import (RenderAction,
+                                                           RenderStateMachine)
+from nerfstudio.viewer.server.utils import \
+    get_intrinsics_matrix_and_camera_to_world_h
+from nerfstudio.viewer.server.viewer_elements import (ViewerControl,
+                                                      ViewerElement)
 from nerfstudio.viewer.viser import ViserServer
-from nerfstudio.viewer.viser.messages import (
-    CameraMessage,
-    CameraPathOptionsRequest,
-    CameraPathPayloadMessage,
-    ClickMessage,
-    CropParamsMessage,
-    NerfstudioMessage,
-    SaveCheckpointMessage,
-    TimeConditionMessage,
-    TrainingStateMessage,
-)
+from nerfstudio.viewer.viser.messages import (CameraMessage,
+                                              CameraPathOptionsRequest,
+                                              CameraPathPayloadMessage,
+                                              ClickMessage, CropParamsMessage,
+                                              NerfstudioMessage,
+                                              SaveCheckpointMessage,
+                                              TimeConditionMessage,
+                                              TrainingStateMessage)
 
 if TYPE_CHECKING:
     from nerfstudio.engine.trainer import Trainer
@@ -79,8 +79,8 @@ class ViewerState:
         self,
         config: cfg.ViewerConfig,
         log_filename: Path,
-        datapath: Path,
-        pipeline: Pipeline,
+        datapath: Optional[Path] = None,
+        pipeline: Optional[Pipeline] = None,
         trainer: Optional[Trainer] = None,
         train_lock: Optional[threading.Lock] = None,
     ):
@@ -346,8 +346,8 @@ class ViewerState:
 
     def init_scene(
         self,
-        train_dataset: InputDataset,
-        train_state: Literal["training", "paused", "completed"],
+        train_dataset: Optional[InputDataset] = None,
+        train_state: Optional[Literal["training", "paused", "completed", "unavailable"]] = "unavailable",
         eval_dataset: Optional[InputDataset] = None,
     ) -> None:
         """Draw some images and the scene aabb in the viewer.

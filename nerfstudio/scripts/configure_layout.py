@@ -1,203 +1,61 @@
 #!/usr/bin/env python
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Literal, Optional
 
-from __future__ import annotations
-
-import random
-import socket
-import traceback
-from datetime import timedelta
-from typing import Any, Callable, Literal, Optional
-
-import numpy as np
-import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
 import tyro
-import yaml
 
-from nerfstudio.configs.config_utils import convert_markup_to_ansi
-from nerfstudio.configs.method_configs import AnnotatedBaseConfigUnion
-from nerfstudio.engine.trainer import TrainerConfig
-from nerfstudio.utils import comms, profiler
-from nerfstudio.utils.rich_utils import CONSOLE
-
-DEFAULT_TIMEOUT = timedelta(minutes=30)
-
-# speedup for when input size to model doesn't change (much)
-torch.backends.cudnn.benchmark = True  # type: ignore
+from nerfstudio.configs.base_config import LoggingConfig, ViewerConfig
+from nerfstudio.utils import writer
+from nerfstudio.viewer.server.viewer_state import ViewerState
 
 
-def _find_free_port() -> str:
-    """Finds a free port."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("", 0))
-    port = sock.getsockname()[1]
-    sock.close()
-    return port
+@dataclass
+class ConfigLayout:
+    """Config layout."""
+
+    load_config: Path
+    """Path to config YAML file."""
+    viewer: ViewerConfig = ViewerConfig()
+    """Viewer configuration"""
+
+    def main(self) -> None:
+        """Main function."""
+        _start_viewer(self.viewer)
 
 
-def _set_random_seed(seed) -> None:
-    """Set randomness seed in torch and numpy"""
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
+def _start_viewer(config: ViewerConfig):
+    """Starts the viewer"""
 
+    viewer_log_path = Path(config.relative_log_filename)
+    viewer_state = ViewerState(
+        config, log_filename=viewer_log_path)
+    banner_messages = [f"Viewer at: {viewer_state.viewer_url}"]
 
-def train_loop(local_rank: int, world_size: int, config: TrainerConfig, global_rank: int = 0):
-    """Main training function that sets up and runs the trainer per process
+    # We don't need logging, but writer.GLOBAL_BUFFER needs to be populated
+    writer.setup_local_writer(LoggingConfig(), max_iter=None, banner_messages=banner_messages)
 
-    Args:
-        local_rank: current rank of process
-        world_size: total number of gpus available
-        config: config file specifying training regimen
-    """
-    _set_random_seed(config.machine.seed + global_rank)
-    trainer = config.setup(local_rank=local_rank, world_size=world_size)
-    trainer.setup()
-    trainer.train()
-
-
-def _distributed_worker(
-    local_rank: int,
-    main_func: Callable,
-    world_size: int,
-    num_devices_per_machine: int,
-    machine_rank: int,
-    dist_url: str,
-    config: TrainerConfig,
-    timeout: timedelta = DEFAULT_TIMEOUT,
-    device_type: Literal["cpu", "cuda", "mps"] = "cuda",
-) -> Any:
-    """Spawned distributed worker that handles the initialization of process group and handles the
-       training process on multiple processes.
-
-    Args:
-        local_rank: Current rank of process.
-        main_func: Function that will be called by the distributed workers.
-        world_size: Total number of gpus available.
-        num_devices_per_machine: Number of GPUs per machine.
-        machine_rank: Rank of this machine.
-        dist_url: URL to connect to for distributed jobs, including protocol
-            E.g., "tcp://127.0.0.1:8686".
-            It can be set to "auto" to automatically select a free port on localhost.
-        config: TrainerConfig specifying training regimen.
-        timeout: Timeout of the distributed workers.
-
-    Raises:
-        e: Exception in initializing the process group
-
-    Returns:
-        Any: TODO: determine the return type
-    """
-    assert torch.cuda.is_available(), "cuda is not available. Please check your installation."
-    global_rank = machine_rank * num_devices_per_machine + local_rank
-
-    dist.init_process_group(
-        backend="nccl" if device_type == "cuda" else "gloo",
-        init_method=dist_url,
-        world_size=world_size,
-        rank=global_rank,
-        timeout=timeout,
+    viewer_state.init_scene(
+        train_dataset=None,
+        train_state="completed",
+        eval_dataset=None,
     )
-    assert comms.LOCAL_PROCESS_GROUP is None
-    num_machines = world_size // num_devices_per_machine
-    for i in range(num_machines):
-        ranks_on_i = list(range(i * num_devices_per_machine, (i + 1) * num_devices_per_machine))
-        pg = dist.new_group(ranks_on_i)
-        if i == machine_rank:
-            comms.LOCAL_PROCESS_GROUP = pg
-
-    assert num_devices_per_machine <= torch.cuda.device_count()
-    output = main_func(local_rank, world_size, global_rank)
-    comms.synchronize()
-    dist.destroy_process_group()
-    return output
-
-
-def launch(
-    main_func: Callable,
-    num_devices_per_machine: int,
-    num_machines: int = 1,
-    machine_rank: int = 0,
-    dist_url: str = "auto",
-    config: Optional[TrainerConfig] = None,
-    timeout: timedelta = DEFAULT_TIMEOUT,
-    device_type: Literal["cpu", "cuda", "mps"] = "cuda",
-) -> None:
-    """Function that spawns multiple processes to call on main_func
-
-    Args:
-        main_func (Callable): function that will be called by the distributed workers
-        num_devices_per_machine (int): number of GPUs per machine
-        num_machines (int, optional): total number of machines
-        machine_rank (int, optional): rank of this machine.
-        dist_url (str, optional): url to connect to for distributed jobs.
-        config (TrainerConfig, optional): config file specifying training regimen.
-        timeout (timedelta, optional): timeout of the distributed workers.
-        device_type: type of device to use for training.
-    """
-    world_size = num_machines * num_devices_per_machine
-    if world_size == 0:
-        raise ValueError("world_size cannot be 0")
-    elif world_size == 1:
-        # uses one process
-        try:
-            main_func(local_rank=0, world_size=world_size)
-        except KeyboardInterrupt:
-            # print the stack trace
-            CONSOLE.print(traceback.format_exc())
-        finally:
-            pass
-    elif world_size > 1:
-        # Using multiple gpus with multiple processes.
-        if dist_url == "auto":
-            assert num_machines == 1, "dist_url=auto is not supported for multi-machine jobs."
-            port = _find_free_port()
-            dist_url = f"tcp://127.0.0.1:{port}"
-        if num_machines > 1 and dist_url.startswith("file://"):
-            CONSOLE.log("file:// is not a reliable init_method in multi-machine jobs. Prefer tcp://")
-
-        process_context = mp.spawn(
-            _distributed_worker,
-            nprocs=num_devices_per_machine,
-            join=False,
-            args=(main_func, world_size, num_devices_per_machine, machine_rank, dist_url, timeout, device_type),
-        )
-        # process_context won't be None because join=False, so it's okay to assert this
-        # for Pylance reasons
-        assert process_context is not None
-        try:
-            process_context.join()
-        except KeyboardInterrupt:
-            for i, process in enumerate(process_context.processes):
-                if process.is_alive():
-                    CONSOLE.log(f"Terminating process {i}...")
-                    process.terminate()
-                process.join()
-                CONSOLE.log(f"Process {i} finished.")
-        finally:
-            pass
-
-
-def main() -> None:
-    """Main function."""
-
-    launch(
-        main_func=train_loop,
-        num_devices_per_machine=1,
-        device_type="cuda",
-        num_machines=1,
-        machine_rank=0,
-        dist_url="auto",
-    )
+    if isinstance(viewer_state, ViewerState):
+        viewer_state.viser_server.set_training_state("completed")
+    while True:
+        time.sleep(0.01)
 
 
 def entrypoint():
     """Entrypoint for use with pyproject scripts."""
-    # Choose a base configuration and override values.
     tyro.extras.set_accent_color("bright_yellow")
-    main()
-
+    tyro.cli(tyro.conf.FlagConversionOff[ConfigLayout]).main()
+    
 
 if __name__ == "__main__":
     entrypoint()
+
+
+# For sphinx docs
+get_parser_fn = lambda: tyro.extras.get_parser(tyro.conf.FlagConversionOff[ConfigLayout])  # noqa
