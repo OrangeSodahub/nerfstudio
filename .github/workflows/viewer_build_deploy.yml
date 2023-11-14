@@ -87,11 +87,21 @@ jobs:
       #       echo "$file was modified"
       #     done
 
-      - run: |
-          python ./nerfstudio/viewer/app/run_deploy.py \
-            --branch-name ${{ env.BRANCH_NAME }} \
-            --ssh-key-string "$SSH_KEY" \
-            --local-folder ./nerfstudio/viewer/app/build \
-            --package-json-filename ./nerfstudio/viewer/app/package.json \
-            --increment-version "False"
-      - run: cat ~/.ssh/config
+      # - run: |
+      #     python ./nerfstudio/viewer/app/run_deploy.py \
+      #       --branch-name ${{ env.BRANCH_NAME }} \
+      #       --ssh-key-string "$SSH_KEY" \
+      #       --local-folder ./nerfstudio/viewer/app/build \
+      #       --package-json-filename ./nerfstudio/viewer/app/package.json \
+      #       --increment-version "False"
+      # - run: cat ~/.ssh/config
+
+      - name: Move build files to workspace
+        run: |
+          mv ./nerfstudio/viewer/app/build/* $GITHUB_WORKSPACE
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.SSH_KEY }}
+          publish_dir: ./
