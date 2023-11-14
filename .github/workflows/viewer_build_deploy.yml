@@ -41,9 +41,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    env:
-      SSH_KEY: ${{secrets.SSH_KEY}}
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8.12
@@ -99,6 +96,13 @@ jobs:
       - name: Move build files to workspace
         run: |
           mv ./nerfstudio/viewer/app/build/* $GITHUB_WORKSPACE
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/github
+          chmod 600 ~/.ssh/github
+          ssh-add ~/.ssh/github
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
