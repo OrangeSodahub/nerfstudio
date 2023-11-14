@@ -101,8 +101,7 @@ jobs:
           mv ./nerfstudio/viewer/app/build/* $GITHUB_WORKSPACE
 
       - name: Deploy to GitHub Pages
-        if: github.repository != 'OrangeSodahub/nerfstudio'
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.SSH_KEY }}
+          deploy_key: ${{ secrets.DEPLOY_KEY }}
           publish_dir: ./
