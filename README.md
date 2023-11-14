@@ -36,7 +36,7 @@
 <p align="center"> A collaboration friendly studio for NeRFs </p>
 
 <p align="center">
-    <a href="https://OrangeSodahub.github.io/nerfstudio" style="color: red; border-bottom: 1px solid red;">
+    <a href="https://OrangeSodahub.github.io/nerfstudio" style="color: red !important; border-bottom: 1px solid red !important;">
     <strong><font color="red"> [The Viewer has been modified] </font></strong></a></p>
 
 <p align="center">
