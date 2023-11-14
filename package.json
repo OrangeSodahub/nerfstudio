@@ -1,0 +1,14 @@
+{
+  "name": "viewer",
+  "homepage": "./nerfstudio/viewer/app",
+  "version": "23-05-15-1",
+  "private": true,
+  "devDependencies": {
+    "gh-pages": "^6.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "deploy": "gh-pages -d nerfstudio/viewer/app/build"
+  }
+}
