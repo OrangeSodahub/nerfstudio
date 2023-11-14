@@ -30,16 +30,8 @@ jobs:
       - name: Build project
         run: CI=false yarn build
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/github
-          chmod 600 ~/.ssh/github
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/github
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.DEPLOY_KEY }}
+          deploy_key: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
