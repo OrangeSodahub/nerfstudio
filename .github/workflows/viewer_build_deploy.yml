@@ -2,9 +2,9 @@ name: Viewer Build and Deploy.
 
 on:
   push:
-    branches: [main]
+    branches: [layout]
   pull_request:
-    branches: [main]
+    branches: [layout]
 
 jobs:
   build:
