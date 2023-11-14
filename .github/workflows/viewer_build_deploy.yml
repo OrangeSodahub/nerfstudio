@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build
+    name: Build-and-Deploy
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,10 +30,6 @@ jobs:
       - name: Build project
         run: CI=false yarn build
 
-      - name: Move build files to workspace
-        run: |
-          mv ./nerfstudio/viewer/app/build/* $GITHUB_WORKSPACE
-
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
@@ -46,4 +42,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           deploy_key: ${{ secrets.DEPLOY_KEY }}
-          publish_dir: ./
+          publish_dir: ./build
