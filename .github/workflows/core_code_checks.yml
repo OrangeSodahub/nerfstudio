@@ -2,9 +2,9 @@ name: Core Tests.
 
 on:
   push:
-    branches: [main]
+    branches: [layout]
   pull_request:
-    branches: [main]
+    branches: [layout]
 
 permissions:
   contents: read

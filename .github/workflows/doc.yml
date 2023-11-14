@@ -1,9 +1,9 @@
 name: Docs
 on:
   push:
-    branches: [main]
+    branches: [layout]
   pull_request:
-    branches: [main]
+    branches: [layout]
   workflow_dispatch:
 
 permissions:
