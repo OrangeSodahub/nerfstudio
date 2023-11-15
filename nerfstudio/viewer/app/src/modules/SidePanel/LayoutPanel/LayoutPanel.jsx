@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as THREE from 'three';
 import { Delete, KeyboardArrowUp, KeyboardArrowDown, ExpandMore, Edit, Visibility } from '@mui/icons-material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { Accordion, AccordionSummary, Button, TextField, Stack, Slider, AccordionDetails, Typography } from '@mui/material';
 import AddBoxRoundedIcon from '@mui/icons-material/AddBoxRounded';
@@ -10,6 +11,7 @@ import {
   ViserWebSocketContext,
   sendWebsocketMessage,
 } from '../../WebSocket/ViserWebSocket';
+import LoadSetModal from '../../LoadSetModal';
 
 interface ClassItemProps {
   category: String;
@@ -261,13 +263,20 @@ export default function LayoutPanel(props) {
       setAddButtonEnabled(true);
     }
   };
+  const [load_set_modal_open, setLoadSetModalOpen] = React.useState(false);
 
-  const add_layout = () => {
+  const add_layout = (size?: THREE.Vector3, position?: THREE.Vector3) => {
     setCategoryCounts((prevCounts) => ({...prevCounts,
       [selectedCategory]: (prevCounts[selectedCategory] || 0) + 1,
     }));
     const cat_id = categories.findIndex(item => item === selectedCategory.toLowerCase());
-    const new_layout = drawLayout(selectedCategory);
+
+    let new_layout: THREE.Object3D;
+    if (size && position) {
+      new_layout = drawLayout(selectedCategory, size, position);
+    } else {
+      new_layout = drawLayout(selectedCategory);
+    }
     const new_layout_properties = new Map();
     new_layout.properties = new_layout_properties;
     new_layout_properties.set('NAME', `idx.${id}`);
@@ -366,22 +375,23 @@ export default function LayoutPanel(props) {
   
   // TODO: finish this
   const get_layout_set = () => {
-    const coords = [];
-    const sizes = [];
-    const cat_ids = [];
+    const bboxes = [];
+    const labels = [];
   
     for (let i = 0; i < layouts.length; i += 1) {
       const layout = layouts[i];
-      const size = [ layout.size.x, layout.size.y, layout.size.z ];
-      const cat_id = layout.properties.get('CAT_ID');
-      sizes.push(size);
-      cat_ids.push(cat_id);
+      const bbox = [
+        layout.position.x, layout.position.y, layout.position.z,
+        layout.size.x, layout.size.y, layout.size.z
+      ];
+      const label = layout.properties.get('CAT_ID');
+      bboxes.push(bbox);
+      labels.push(label);
     }
   
     const layout_set_object = {
-      coords,
-      sizes,
-      cat_ids,
+      bboxes,
+      labels,
     };
     return layout_set_object;
   };
@@ -407,35 +417,37 @@ export default function LayoutPanel(props) {
     URL.revokeObjectURL(href);
   };
 
-  // const load_layout_set = (layout_set_object) => {
-  //   const new_layout_list = [];
-  //   const new_properties = new Map(layoutProperties);
+  const load_layout_set = (layout_set_object) => {
+    const { bboxes, labels } = layout_set_object;
   
-  //   const { coords, sizes, cat_ids } = layout_set_object;
-  
-  //   for (let i = 0; i < coords.length; i += 1) {
-  //     const coord = coords[i];
-  //     const size = sizes[i];
-  //     const cat_id = cat_ids[i];
+    for (let i = 0; i < bboxes.length; i += 1) {
+      const bbox = bboxes[i];
+      const label = labels[i];
 
-  //     const category = categories[cat_id];
-  //     setSelectedCategory(category)
-  //     // TODO: support initial values
-  //     add_layout();
-  //   }
-  // };
+      const { size, position } = bbox;
+      const category = categories[label];
+      setSelectedCategory(category)
+      // TODO: support initial values
+      add_layout(size, position);
+    }
+  };
 
-  // const uploadLayoutSet = (e) => {
-  //   const fileUpload = e.target.files[0];
+  const uploadLayoutSet = (e) => {
+    const fileUpload = e.target.files[0];
   
-  //   const fr = new FileReader();
-  //   fr.onload = (res) => {
-  //     const layout_set_object = JSON.parse(res.target.result);
-  //     load_layout_set(layout_set_object);
-  //   };
-  
-  //   fr.readAsText(fileUpload);
-  // };
+    const fr = new FileReader();
+    fr.onload = (res) => {
+      const layout_set_object = JSON.parse(res.target.result);
+      load_layout_set(layout_set_object);
+    };
+
+    fr.readAsText(fileUpload);
+  };
+
+  const open_load_set_modal = () => {
+    sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
+    setLoadSetModalOpen(true);
+  }
 
   return (
       <div className="LayoutPanel">
@@ -461,7 +473,21 @@ export default function LayoutPanel(props) {
             onClick={export_layout_set}
             disabled={layouts.length === 0}
           >
-            Export Layouts
+            Export
+          </Button>
+          <LoadSetModal
+            open={load_set_modal_open}
+            setOpen={setLoadSetModalOpen}
+            setUploadFunction={uploadLayoutSet}
+            loadLayoutSetFunction={load_layout_set}
+          />
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<FileUploadOutlinedIcon />}
+            onClick={open_load_set_modal}
+          >
+            Upload
           </Button>
         </div>
         <div>

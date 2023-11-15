@@ -164,7 +164,7 @@ export function drawCameras(cameras): Record<number, THREE.Object3D> {
   return cameraObjects;
 }
 
-export function drawLayout(category: String): THREE.Object3D {
+export function drawLayout(category: String, init_size?: THREE.Vector3, init_pos?: THREE.Vector3): THREE.Object3D {
 
   const categorySettings = {
     wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffffff },
@@ -172,9 +172,9 @@ export function drawLayout(category: String): THREE.Object3D {
     cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x00ff00 },
   };
 
-  const {size, color} = categorySettings[category];
-  console.log('size: ', size, 'color: ', color)
-
+  const {size: defaultSize, color} = categorySettings[category];
+  const size = init_size ?? defaultSize;
+  const position = init_pos ?? new THREE.Vector3(0, 0, size.z / 2 - 1);
   const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
   const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6 });
   const layoutObject = new THREE.Mesh(geometry, material);
@@ -189,6 +189,7 @@ export function drawLayout(category: String): THREE.Object3D {
   layoutObject.originalSize = size.clone();
   layoutObject.size = size;
   layoutObject.opacity = 0.6;
+  layoutObject.position.set(position.x, position.y, position.z);
 
   return layoutObject;
 }
