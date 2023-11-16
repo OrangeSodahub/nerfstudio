@@ -85,7 +85,6 @@ function LayoutList(props) {
   }
 
   const delete_layout = (index) => {
-    console.log('Deleting layout: ', index);
     // update counts
     setCategoryCounts((prevCounts) => {
       const updatedCounts = { ...prevCounts };
@@ -265,28 +264,23 @@ export default function LayoutPanel(props) {
   };
   const [load_set_modal_open, setLoadSetModalOpen] = React.useState(false);
 
-  const add_layout = (size?: THREE.Vector3, position?: THREE.Vector3) => {
+  const add_layout = () => {
     setCategoryCounts((prevCounts) => ({...prevCounts,
       [selectedCategory]: (prevCounts[selectedCategory] || 0) + 1,
     }));
     const cat_id = categories.findIndex(item => item === selectedCategory.toLowerCase());
-
-    let new_layout: THREE.Object3D;
-    if (size && position) {
-      new_layout = drawLayout(selectedCategory, size, position);
-    } else {
-      new_layout = drawLayout(selectedCategory);
-    }
+    
+    const new_layout = drawLayout(selectedCategory);
     const new_layout_properties = new Map();
     new_layout.properties = new_layout_properties;
     new_layout_properties.set('NAME', `idx.${id}`);
     new_layout_properties.set('CATEGORY', `${selectedCategory}`)
     new_layout_properties.set('CAT_ID', `${cat_id}`)
     const new_properties = new Map(layoutProperties);
+    new_properties.set(new_layout.uuid, new_layout_properties);
     setLayoutProperties(new_properties);
 
-    const new_layout_list = layouts.concat(new_layout);
-    setLayouts(new_layout_list);
+    setLayouts(layouts.concat(new_layout));
     setId(id + 1)
   };
 
@@ -373,7 +367,6 @@ export default function LayoutPanel(props) {
     });
   };
   
-  // TODO: finish this
   const get_layout_set = () => {
     const bboxes = [];
     const labels = [];
@@ -400,7 +393,6 @@ export default function LayoutPanel(props) {
     // export the layout set
     sendWebsocketMessage(viser_websocket, { type: 'SaveCheckpointMessage' });
     const layout_set_object = get_layout_set();
-    console.log()
   
     const json = JSON.stringify(layout_set_object, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -418,39 +410,58 @@ export default function LayoutPanel(props) {
   };
 
   const load_layout_set = (layout_set_object) => {
+    const new_layout_set = layouts;
+    const new_properties = new Map(layoutProperties);
+
     const { bboxes, labels } = layout_set_object;
-  
+    
     for (let i = 0; i < bboxes.length; i += 1) {
       const bbox = bboxes[i];
       const label = labels[i];
 
-      const { size, position } = bbox;
+      const position = new THREE.Vector3(...bbox.slice(0, 3));
+      const size = new THREE.Vector3(...bbox.slice(3, 6));
       const category = categories[label];
-      setSelectedCategory(category)
-      // TODO: support initial values
-      add_layout(size, position);
-    }
-  };
 
+      setCategoryCounts((prevCounts) => ({...prevCounts,
+        [category]: (prevCounts[category] || 0) + 1,
+      }));
+      const cat_id = categories.findIndex(item => item === category.toLowerCase());
+      const new_layout = drawLayout(category, size, position);
+      const new_layout_properties = new Map();
+      const new_id = id + i;
+      new_layout.properties = new_layout_properties;
+      new_layout_properties.set('NAME', `idx.${new_id}`);
+      new_layout_properties.set('CATEGORY', `${category}`)
+      new_layout_properties.set('CAT_ID', `${cat_id}`)
+      new_properties.set(new_layout.uuid, new_layout_properties);
+      new_layout_set.push(new_layout);
+    }
+
+    setLayoutProperties(new_properties);
+    setLayouts(new_layout_set);
+    setId(id + bboxes.length);
+  };
+  
   const uploadLayoutSet = (e) => {
     const fileUpload = e.target.files[0];
-  
+    
     const fr = new FileReader();
     fr.onload = (res) => {
       const layout_set_object = JSON.parse(res.target.result);
       load_layout_set(layout_set_object);
     };
-
+    
     fr.readAsText(fileUpload);
   };
-
+  
   const open_load_set_modal = () => {
     sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
     setLoadSetModalOpen(true);
-  }
+  };
 
   return (
-      <div className="LayoutPanel">
+    <div className="LayoutPanel">
         {categories.map((category) => (
           <ClassItem 
             key={category}

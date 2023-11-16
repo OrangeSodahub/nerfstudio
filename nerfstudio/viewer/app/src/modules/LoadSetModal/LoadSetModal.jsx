@@ -63,12 +63,12 @@ export default function LoadSetModal(props: LoadSetModalProps) {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        aria-labelledby="modal-modal-title2"
+        aria-describedby="modal-modal-description2"
       >
         <Box className="LoadSetModal-box">
           <Typography
-            id="modal-modal-description"
+            id="modal-modal-description2"
             component="div"
             sx={{ mt: 2 }}
           >
@@ -84,9 +84,9 @@ export default function LoadSetModal(props: LoadSetModalProps) {
                     variant="filled"
                     size="small"
                   >
-                    <InputLabel id="ageInputLabel">Existing Set</InputLabel>
+                    <InputLabel id="ageInputLabel2">Existing Set</InputLabel>
                     <Select
-                      labelId="ageInputLabel"
+                      labelId="ageInputLabel2"
                       label="Layout Set"
                       value={existingSetSelect}
                       onChange={handleSetSelect}
