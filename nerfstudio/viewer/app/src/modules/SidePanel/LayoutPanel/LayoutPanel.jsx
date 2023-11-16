@@ -42,6 +42,8 @@ function LayoutList(props) {
   const setLayoutProperties = props.setLayoutProperties;
   const setCategoryCounts = props.setCategoryCounts;
   const setTransformControls = props.setTransformControls;
+  const handleSliderMouseDown = props.handleSliderMouseDown;
+  const handleSliderMouseUp= props.handleSliderMouseUp;
 
   const [expanded, setExpanded] = React.useState(null);
 
@@ -177,8 +179,10 @@ function LayoutList(props) {
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Typography style={{ marginRight: '10px' }}>Scale(X)</Typography>
             <Slider
-              value={layout.size.x / layout.originalSize.x}
+              value={(layout.size.x / layout.originalSize.x).toFixed(2)}
               onChange={(event, value) => handleSizeChange('x', index, value)}
+              onMouseUp={handleSliderMouseUp}
+              onMouseDown={handleSliderMouseDown}
               aria-labelledby={`size-x-slider-${index}`}
               valueLabelDisplay="auto"
               min={0.1} max={2} step={0.02}
@@ -188,8 +192,10 @@ function LayoutList(props) {
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Typography style={{ marginRight: '10px' }}>Scale(Y)</Typography>
             <Slider
-              value={layout.size.y / layout.originalSize.y}
+              value={(layout.size.y / layout.originalSize.y).toFixed(2)}
               onChange={(event, value) => handleSizeChange('y', index, value)}
+              onMouseUp={handleSliderMouseUp}
+              onMouseDown={handleSliderMouseDown}
               aria-labelledby={`size-y-slider-${index}`}
               valueLabelDisplay="auto"
               min={0.1} max={2} step={0.02}
@@ -199,8 +205,10 @@ function LayoutList(props) {
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Typography style={{ marginRight: '10px' }}>Scale(Z)</Typography>
             <Slider
-              value={layout.size.z / layout.originalSize.z}
+              value={(layout.size.z / layout.originalSize.z).toFixed(2)}
               onChange={(event, value) => handleSizeChange('z', index, value)}
+              onMouseUp={handleSliderMouseUp}
+              onMouseDown={handleSliderMouseDown}
               aria-labelledby={`size-z-slider-${index}`}
               valueLabelDisplay="auto"
               min={0.1} max={2} step={0.02}
@@ -246,7 +254,8 @@ export default function LayoutPanel(props) {
   };
   const [load_set_modal_open, setLoadSetModalOpen] = React.useState(false);
   const [currentOpacity, setCurrentOpacity] = React.useState(0.6);
-  const [opacityChangeState, setOpacityChangeState] = React.useState(false);
+  const [sliderChangeState, setSliderChangeState] = React.useState(false);
+  const [layoutsAdded, setLayoutsAdded] = React.useState(false);
 
   const set_transform_controls = (index) => {
     const layout = sceneTree.find_object_no_create([
@@ -283,7 +292,8 @@ export default function LayoutPanel(props) {
     new_properties.set(new_layout.uuid, new_layout_properties);
     setLayoutProperties(new_properties);
     setLayouts(layouts.concat(new_layout));
-    setId(id + 1)
+    setId(id + 1);
+    setLayoutsAdded(true);
   };
 
   const swapLayouts = (index, new_index) => {
@@ -302,6 +312,7 @@ export default function LayoutPanel(props) {
       layouts[index],
       ...new_layouts.slice(new_index),
     ]);
+    setLayoutsAdded(false);
   };
 
   let update_layouts_interval = null;
@@ -355,8 +366,7 @@ export default function LayoutPanel(props) {
       );
     }
 
-    console.log(opacityChangeState);
-    if (layouts.length > 0 && !opacityChangeState) {
+    if (layouts.length > 0 && layoutsAdded && !sliderChangeState) {
       set_transform_controls(layouts.length - 1);
     }
   }, [layouts, layoutProperties]);
@@ -373,16 +383,20 @@ export default function LayoutPanel(props) {
       return newLayouts;
     });
     setCurrentOpacity(value);
+    setLayoutsAdded(false);
   };
 
-  const handleOpacityMouseDown = () => {
-    setOpacityChangeState(true);
+  const handleSliderMouseDown = () => {
+    setSliderChangeState(true);
+    setLayoutsAdded(false);
   };
-  const handleOpacityMouseUp = () => {
-    setOpacityChangeState(false);
+  const handleSliderMouseUp = () => {
+    setSliderChangeState(false);
+    setLayoutsAdded(false);
   };
   
   const get_layout_set = () => {
+    setLayoutsAdded(false);
     const bboxes = [];
     const labels = [];
   
@@ -405,6 +419,7 @@ export default function LayoutPanel(props) {
   };
   
   const export_layout_set = () => {
+    setLayoutsAdded(false);
     // export the layout set
     sendWebsocketMessage(viser_websocket, { type: 'SaveCheckpointMessage' });
     const layout_set_object = get_layout_set();
@@ -456,6 +471,7 @@ export default function LayoutPanel(props) {
     setLayoutProperties(new_properties);
     setLayouts(new_layout_set);
     setId(id + bboxes.length);
+    setLayoutsAdded(false);
   };
   
   const uploadLayoutSet = (e) => {
@@ -468,11 +484,13 @@ export default function LayoutPanel(props) {
     };
     
     fr.readAsText(fileUpload);
+    setLayoutsAdded(false);
   };
   
   const open_load_set_modal = () => {
     sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
     setLoadSetModalOpen(true);
+    setLayoutsAdded(false);
   };
 
   return (
@@ -536,10 +554,10 @@ export default function LayoutPanel(props) {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Typography style={{ marginLeft: '20px', marginRight: '10px' }}>Opacity</Typography>
               <Slider
-                value={currentOpacity}
+                value={currentOpacity.toFixed(2)}
                 onChange={handleOpacityChange}
-                onMouseUp={handleOpacityMouseUp}
-                onMouseDown={handleOpacityMouseDown}
+                onMouseUp={handleSliderMouseUp}
+                onMouseDown={handleSliderMouseDown}
                 aria-labelledby="opacity-slider"
                 valueLabelDisplay="auto"
                 min={0} max={1} step={0.01}
@@ -559,6 +577,8 @@ export default function LayoutPanel(props) {
             setLayoutProperties={setLayoutProperties}
             setCategoryCounts={setCategoryCounts}
             setTransformControls={set_transform_controls}
+            handleSliderMouseDown={handleSliderMouseDown}
+            handleSliderMouseUp={handleSliderMouseUp}
           />
         </div>
       </div>
