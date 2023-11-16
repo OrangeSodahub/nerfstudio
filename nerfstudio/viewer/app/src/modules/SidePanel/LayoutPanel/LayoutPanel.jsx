@@ -248,6 +248,25 @@ export default function LayoutPanel(props) {
   const [currentOpacity, setCurrentOpacity] = React.useState(0.6);
   const [opacityChangeState, setOpacityChangeState] = React.useState(false);
 
+  const set_transform_controls = (index) => {
+    const layout = sceneTree.find_object_no_create([
+      'Layout Set', 'Layouts', index.toString(), 'Layout'
+    ]);
+    if (layout != null) {
+      const viewer_buttons = document.getElementsByClassName(
+        'ViewerWindow-buttons'
+      )[0];
+      if (layout === transform_controls.object) {
+        transform_controls.detach();
+        viewer_buttons.style.display = 'none';
+      } else {
+        transform_controls.detach();
+        transform_controls.attach(layout);
+        viewer_buttons.style.display = 'block';
+      }
+    }
+  };
+
   const add_layout = () => {
     setCategoryCounts((prevCounts) => ({...prevCounts,
       [selectedCategory]: (prevCounts[selectedCategory] || 0) + 1,
@@ -454,25 +473,6 @@ export default function LayoutPanel(props) {
   const open_load_set_modal = () => {
     sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
     setLoadSetModalOpen(true);
-  };
-
-  const set_transform_controls = (index) => {
-    const layout = sceneTree.find_object_no_create([
-      'Layout Set', 'Layouts', index.toString(), 'Layout'
-    ]);
-    if (layout != null) {
-      const viewer_buttons = document.getElementsByClassName(
-        'ViewerWindow-buttons'
-      )[0];
-      if (layout === transform_controls.object) {
-        transform_controls.detach();
-        viewer_buttons.style.display = 'none';
-      } else {
-        transform_controls.detach();
-        transform_controls.attach(layout);
-        viewer_buttons.style.display = 'block';
-      }
-    }
   };
 
   return (
