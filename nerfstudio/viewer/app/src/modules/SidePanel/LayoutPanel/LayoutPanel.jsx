@@ -33,15 +33,13 @@ function ClassItem(props: ClassItemProps) {
 }
 
 function LayoutList(props) {
-  const sceneTree = props.sceneTree;
   const layouts = props.layouts;
-  const transform_controls = props.transform_controls;
   const setLayouts = props.setLayouts;
   const swapLayouts = props.swapLayouts;
   const layoutProperties = props.layoutProperties;
   const setLayoutProperties = props.setLayoutProperties;
-  const setCategoryCounts = props.setCategoryCounts;
   const setTransformControls = props.setTransformControls;
+  const delete_layout = props.delete_layout;
   const handleSliderMouseDown = props.handleSliderMouseDown;
   const handleSliderMouseUp= props.handleSliderMouseUp;
 
@@ -67,28 +65,6 @@ function LayoutList(props) {
       return newLayouts;
     });
   }
-
-  const delete_layout = (index) => {
-    // update counts
-    setCategoryCounts((prevCounts) => {
-      const updatedCounts = { ...prevCounts };
-      const selectedCategory = layouts[index].properties.get('CATEGORY');
-      updatedCounts[selectedCategory] -= 1;
-      if (updatedCounts[selectedCategory] === 0) {
-        delete updatedCounts[selectedCategory];
-      }
-      return updatedCounts;
-    });
-    // delete object
-    sceneTree.delete(['Layout Set', 'Layouts', index.toString(), 'Layout']);
-    setLayouts([...layouts.slice(0, index), ...layouts.slice(index + 1)]);
-    // delete transform controls
-    transform_controls.detach();
-    const viewer_buttons = document.getElementsByClassName(
-      'ViewerWindow-buttons',
-    )[0];
-    viewer_buttons.style.display = 'none';
-  };
 
   const layoutList = layouts.map((layout, index) => {
     return (
@@ -333,6 +309,29 @@ export default function LayoutPanel(props) {
     }
   });
 
+  const delete_layout = (index) => {
+    // update counts
+    setCategoryCounts((prevCounts) => {
+      const updatedCounts = { ...prevCounts };
+      const categoryToBeDeleted = layouts[index].properties.get('CATEGORY');
+      updatedCounts[categoryToBeDeleted] -= 1;
+      if (updatedCounts[categoryToBeDeleted] === 0) {
+        delete updatedCounts[categoryToBeDeleted];
+      }
+      return updatedCounts;
+    });
+    // delete object
+    sceneTree.delete(['Layout Set', 'Layouts', index.toString(), 'Layout']);
+    setLayouts([...layouts.slice(0, index), ...layouts.slice(index + 1)]);
+    // delete transform controls
+    transform_controls.detach();
+    const viewer_buttons = document.getElementsByClassName(
+      'ViewerWindow-buttons',
+    )[0];
+    viewer_buttons.style.display = 'none';
+    setLayoutsAdded(false);
+  };
+
   // draw layouts to the scene
   React.useEffect(() => {
     const labels = Array.from(document.getElementsByClassName('label'));
@@ -568,15 +567,13 @@ export default function LayoutPanel(props) {
         </div>
         <div className="LayoutList-container">
           <LayoutList
-            sceneTree={sceneTree}
             layouts={layouts}
-            transform_controls={transform_controls}
             setLayouts={setLayouts}
             swapLayouts={swapLayouts}
             layoutProperties={layoutProperties}
             setLayoutProperties={setLayoutProperties}
-            setCategoryCounts={setCategoryCounts}
             setTransformControls={set_transform_controls}
+            delete_layout={delete_layout}
             handleSliderMouseDown={handleSliderMouseDown}
             handleSliderMouseUp={handleSliderMouseUp}
           />
