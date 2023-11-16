@@ -164,7 +164,9 @@ export function drawCameras(cameras): Record<number, THREE.Object3D> {
   return cameraObjects;
 }
 
-export function drawLayout(category: String, init_size?: THREE.Vector3, init_pos?: THREE.Vector3): THREE.Object3D {
+export function drawLayout(category: String, init_opacity: Number,
+                                             init_size?: THREE.Vector3,
+                                             init_pos?: THREE.Vector3): THREE.Object3D {
 
   const categorySettings = {
     wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffffff },
@@ -176,7 +178,7 @@ export function drawLayout(category: String, init_size?: THREE.Vector3, init_pos
   const size = init_size ?? defaultSize;
   const position = init_pos ?? new THREE.Vector3(0, 0, size.z / 2 - 1);
   const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6 });
+  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: init_opacity });
   const layoutObject = new THREE.Mesh(geometry, material);
 
   const edges = new THREE.EdgesGeometry(geometry);

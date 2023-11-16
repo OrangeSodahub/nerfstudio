@@ -41,27 +41,9 @@ function LayoutList(props) {
   const layoutProperties = props.layoutProperties;
   const setLayoutProperties = props.setLayoutProperties;
   const setCategoryCounts = props.setCategoryCounts;
+  const setTransformControls = props.setTransformControls;
 
   const [expanded, setExpanded] = React.useState(null);
-
-  const set_transform_controls = (index) => {
-    const layout = sceneTree.find_object_no_create([
-      'Layout Set', 'Layouts', index.toString(), 'Layout'
-    ]);
-    if (layout != null) {
-      const viewer_buttons = document.getElementsByClassName(
-        'ViewerWindow-buttons'
-      )[0];
-      if (layout === transform_controls.object) {
-        transform_controls.detach();
-        viewer_buttons.style.display = 'none';
-      } else {
-        transform_controls.detach();
-        transform_controls.attach(layout);
-        viewer_buttons.style.display = 'block';
-      }
-    }
-  };
 
   const handleChange = (layoutUUID: string) => (
     event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -172,7 +154,7 @@ function LayoutList(props) {
             size="small"
             onClick={(e) => {
               e.stopPropagation();
-              set_transform_controls(index);
+              setTransformControls(index);
             }}
           >
             <Edit />
@@ -263,14 +245,16 @@ export default function LayoutPanel(props) {
     }
   };
   const [load_set_modal_open, setLoadSetModalOpen] = React.useState(false);
+  const [currentOpacity, setCurrentOpacity] = React.useState(0.6);
+  const [opacityChangeState, setOpacityChangeState] = React.useState(false);
 
   const add_layout = () => {
     setCategoryCounts((prevCounts) => ({...prevCounts,
       [selectedCategory]: (prevCounts[selectedCategory] || 0) + 1,
     }));
     const cat_id = categories.findIndex(item => item === selectedCategory.toLowerCase());
-    
-    const new_layout = drawLayout(selectedCategory);
+
+    const new_layout = drawLayout(selectedCategory, currentOpacity);
     const new_layout_properties = new Map();
     new_layout.properties = new_layout_properties;
     new_layout_properties.set('NAME', `idx.${id}`);
@@ -279,7 +263,6 @@ export default function LayoutPanel(props) {
     const new_properties = new Map(layoutProperties);
     new_properties.set(new_layout.uuid, new_layout_properties);
     setLayoutProperties(new_properties);
-
     setLayouts(layouts.concat(new_layout));
     setId(id + 1)
   };
@@ -352,6 +335,11 @@ export default function LayoutPanel(props) {
         layout,
       );
     }
+
+    console.log(opacityChangeState);
+    if (layouts.length > 0 && !opacityChangeState) {
+      set_transform_controls(layouts.length - 1);
+    }
   }, [layouts, layoutProperties]);
 
   const handleOpacityChange = (event, value) => {
@@ -365,6 +353,14 @@ export default function LayoutPanel(props) {
       });
       return newLayouts;
     });
+    setCurrentOpacity(value);
+  };
+
+  const handleOpacityMouseDown = () => {
+    setOpacityChangeState(true);
+  };
+  const handleOpacityMouseUp = () => {
+    setOpacityChangeState(false);
   };
   
   const get_layout_set = () => {
@@ -427,7 +423,7 @@ export default function LayoutPanel(props) {
         [category]: (prevCounts[category] || 0) + 1,
       }));
       const cat_id = categories.findIndex(item => item === category.toLowerCase());
-      const new_layout = drawLayout(category, size, position);
+      const new_layout = drawLayout(category, currentOpacity, size, position);
       const new_layout_properties = new Map();
       const new_id = id + i;
       new_layout.properties = new_layout_properties;
@@ -458,6 +454,25 @@ export default function LayoutPanel(props) {
   const open_load_set_modal = () => {
     sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
     setLoadSetModalOpen(true);
+  };
+
+  const set_transform_controls = (index) => {
+    const layout = sceneTree.find_object_no_create([
+      'Layout Set', 'Layouts', index.toString(), 'Layout'
+    ]);
+    if (layout != null) {
+      const viewer_buttons = document.getElementsByClassName(
+        'ViewerWindow-buttons'
+      )[0];
+      if (layout === transform_controls.object) {
+        transform_controls.detach();
+        viewer_buttons.style.display = 'none';
+      } else {
+        transform_controls.detach();
+        transform_controls.attach(layout);
+        viewer_buttons.style.display = 'block';
+      }
+    }
   };
 
   return (
@@ -521,13 +536,15 @@ export default function LayoutPanel(props) {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Typography style={{ marginLeft: '20px', marginRight: '10px' }}>Opacity</Typography>
               <Slider
-                value={layouts[0].opacity}
+                value={currentOpacity}
                 onChange={handleOpacityChange}
+                onMouseUp={handleOpacityMouseUp}
+                onMouseDown={handleOpacityMouseDown}
                 aria-labelledby="opacity-slider"
                 valueLabelDisplay="auto"
                 min={0} max={1} step={0.01}
               />
-              <Typography style={{ marginLeft: '10px', marginRight: '20px' }}>{layouts[0].opacity.toFixed(1)}</Typography>
+              <Typography style={{ marginLeft: '10px', marginRight: '20px' }}>{currentOpacity.toFixed(1)}</Typography>
             </div>
           )}
         </div>
@@ -541,6 +558,7 @@ export default function LayoutPanel(props) {
             layoutProperties={layoutProperties}
             setLayoutProperties={setLayoutProperties}
             setCategoryCounts={setCategoryCounts}
+            setTransformControls={set_transform_controls}
           />
         </div>
       </div>
