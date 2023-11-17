@@ -232,6 +232,7 @@ export default function LayoutPanel(props) {
   const [currentOpacity, setCurrentOpacity] = React.useState(0.6);
   const [sliderChangeState, setSliderChangeState] = React.useState(false);
   const [layoutsAdded, setLayoutsAdded] = React.useState(false);
+  const [filesInQueue, setFilesInQueue] = React.useState([]);
 
   const set_transform_controls = (index) => {
     const layout = sceneTree.find_object_no_create([
@@ -324,6 +325,20 @@ export default function LayoutPanel(props) {
     sceneTree.delete(['Layout Set', 'Layouts', index.toString(), 'Layout']);
     setLayouts([...layouts.slice(0, index), ...layouts.slice(index + 1)]);
     // delete transform controls
+    transform_controls.detach();
+    const viewer_buttons = document.getElementsByClassName(
+      'ViewerWindow-buttons',
+    )[0];
+    viewer_buttons.style.display = 'none';
+    setLayoutsAdded(false);
+  };
+
+  const delete_all_layouts = () => {
+    for (let i = 0; i < layouts.length; i += 1) {
+      sceneTree.delete(['Layout Set', 'Layouts', i.toString(), 'Layout']);
+    }
+    setCategoryCounts({});
+    setLayouts([]);
     transform_controls.detach();
     const viewer_buttons = document.getElementsByClassName(
       'ViewerWindow-buttons',
@@ -438,9 +453,10 @@ export default function LayoutPanel(props) {
     URL.revokeObjectURL(href);
   };
 
-  const load_layout_set = (layout_set_object) => {
-    const new_layout_set = layouts;
-    const new_properties = new Map(layoutProperties);
+  const load_layout_set = (layout_set_object, delete_first) => {
+    const new_layout_set = delete_first ? [] : layouts;
+    const new_properties = delete_first ? new Map() : new Map(layoutProperties);
+    let newCategoryCounts = new Map();
 
     const { bboxes, labels } = layout_set_object;
     
@@ -452,9 +468,7 @@ export default function LayoutPanel(props) {
       const size = new THREE.Vector3(...bbox.slice(3, 6));
       const category = categories[label];
 
-      setCategoryCounts((prevCounts) => ({...prevCounts,
-        [category]: (prevCounts[category] || 0) + 1,
-      }));
+      newCategoryCounts = {...newCategoryCounts, [category]: (newCategoryCounts[category] || 0) + 1};
       const cat_id = categories.findIndex(item => item === category.toLowerCase());
       const new_layout = drawLayout(category, currentOpacity, size, position);
       const new_layout_properties = new Map();
@@ -469,22 +483,38 @@ export default function LayoutPanel(props) {
 
     setLayoutProperties(new_properties);
     setLayouts(new_layout_set);
+    setCategoryCounts( delete_first ? newCategoryCounts : {...categoryCounts, ...newCategoryCounts});
     setId(id + bboxes.length);
     setLayoutsAdded(false);
   };
 
-  const uploadLayoutSet = (e) => {
-    const fileUpload = e.target.files[0];
-    
+  const handleSingleLayoutSet = (file, delete_first = false) => {
     const fr = new FileReader();
     fr.onload = (res) => {
       const layout_set_object = JSON.parse(res.target.result);
-      load_layout_set(layout_set_object);
+      load_layout_set(layout_set_object, delete_first);
     };
     
-    fr.readAsText(fileUpload);
+    fr.readAsText(file);
     setLayoutsAdded(false);
   };
+
+  const uploadLayoutSet = (e) => {
+    const files = e.target.files;
+    const files_list = [];
+    for (let i = 0; i < files.length; i += 1) {
+      files_list.push(files[i]);
+    }
+
+    setFilesInQueue([...files_list.slice(1)]);
+    handleSingleLayoutSet(files_list[0]);
+  };
+
+  const handleNextLayoutSet = () => {
+    // next layout set
+    handleSingleLayoutSet(filesInQueue[0], true);
+    setFilesInQueue([...filesInQueue.slice(1)]);
+  }
 
   const open_load_set_modal = () => {
     sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
@@ -533,6 +563,24 @@ export default function LayoutPanel(props) {
             Upload
           </Button>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button
+            variant="outlined"
+            component="label"
+            onClick={delete_all_layouts}
+            disabled={layouts.length === 0}
+          >
+            Delete ALL
+          </Button>
+          <Button
+            variant="outlined"
+            component="label"
+            onClick={handleNextLayoutSet}
+            disabled={filesInQueue.length === 0}
+          >
+            Next Scene
+          </Button>
+        </div>
         <div>
           {Object.keys(categoryCounts).length === 0 ? (
             <p style={{ textAlign: 'left', paddingLeft: '10px' }}>
@@ -545,6 +593,13 @@ export default function LayoutPanel(props) {
                 .map(([category, count]) => `${count} \u00d7 ${category}`)
                 .join(', ')}
               {' in current scene'}.
+            </p>
+          )}
+        </div>
+        <div>
+          {filesInQueue.length === 0 ? null : (
+            <p style={{ textAlign: 'left', paddingLeft: '10px' }}>
+              {`${filesInQueue.length} in queue.`}
             </p>
           )}
         </div>
