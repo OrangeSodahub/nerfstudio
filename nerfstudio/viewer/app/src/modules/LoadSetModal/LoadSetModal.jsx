@@ -143,7 +143,7 @@ export default function LoadSetModal(props: LoadSetModalProps) {
                     accept=".json"
                     name="Layout Set File(s)"
                     onChange={handleFileInput}
-                    multiple={true}
+                    multiple="true"
                     hidden
                     ref={hiddenFileInput}
                   />
@@ -162,7 +162,7 @@ export default function LoadSetModal(props: LoadSetModalProps) {
                     type="file"
                     name="Layout Set Foler"
                     onChange={handleFolderInput}
-                    multiple={true}
+                    multiple="true"
                     webkitdirectory="true"
                     hidden
                     ref={hiddenFolderInput}
