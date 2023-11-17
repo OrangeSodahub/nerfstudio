@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { Delete, KeyboardArrowUp, KeyboardArrowDown, ExpandMore, Edit, Visibility } from '@mui/icons-material';
+import { Delete, KeyboardArrowUp, KeyboardArrowDown, ExpandMore, Edit, Visibility, VisibilityOff } from '@mui/icons-material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
@@ -33,11 +33,13 @@ function ClassItem(props: ClassItemProps) {
 }
 
 function LayoutList(props) {
+  const scene_node = props.scene_node;
   const layouts = props.layouts;
   const setLayouts = props.setLayouts;
   const swapLayouts = props.swapLayouts;
   const layoutProperties = props.layoutProperties;
   const setLayoutProperties = props.setLayoutProperties;
+  const transform_controls = props.transform_controls;
   const setTransformControls = props.setTransformControls;
   const delete_layout = props.delete_layout;
   const handleSliderMouseDown = props.handleSliderMouseDown;
@@ -65,6 +67,31 @@ function LayoutList(props) {
       return newLayouts;
     });
   }
+
+  const fetchVisbility = (index) => {
+    let visible = true;
+    scene_node.object.traverse((obj) => {
+      if (obj.name === index.toString()) {
+        visible = obj.visible;
+      }
+    });
+    return visible;
+  }
+
+  const toggleVisbility = (index) => {
+    scene_node.object.traverse((obj) => {
+      if (obj.name === index.toString()) {
+        const visible = obj.visible;
+        // eslint-disable-next-line no-param-reassign
+        obj.visible = !visible;
+      }
+    });
+    transform_controls.detach();
+    const viewer_buttons = document.getElementsByClassName(
+      'ViewerWindow-buttons',
+      )[0];
+    viewer_buttons.style.display = 'none';
+  };
 
   const layoutList = layouts.map((layout, index) => {
     return (
@@ -142,9 +169,10 @@ function LayoutList(props) {
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
+                toggleVisbility(index);
               }}
-            >
-              <Visibility />
+              >
+              {fetchVisbility(index) ? (<Visibility />) : (<VisibilityOff />)}
             </Button>
             <Button size="small" onClick={() => delete_layout(index)}>
               <Delete />
@@ -267,6 +295,7 @@ export default function LayoutPanel(props) {
     new_layout_properties.set('NAME', `idx.${id}`);
     new_layout_properties.set('CATEGORY', `${selectedCategory}`)
     new_layout_properties.set('CAT_ID', `${cat_id}`)
+    new_layout_properties.set('VISIBLE', true)
     const new_properties = new Map(layoutProperties);
     new_properties.set(new_layout.uuid, new_layout_properties);
     setLayoutProperties(new_properties);
@@ -479,6 +508,7 @@ export default function LayoutPanel(props) {
       new_layout_properties.set('NAME', `idx.${new_id}`);
       new_layout_properties.set('CATEGORY', `${category}`)
       new_layout_properties.set('CAT_ID', `${cat_id}`)
+      new_layout_properties.set('VISIBLE', true)
       new_properties.set(new_layout.uuid, new_layout_properties);
       new_layout_set.push(new_layout);
     }
@@ -516,6 +546,11 @@ export default function LayoutPanel(props) {
     // next layout set
     handleSingleLayoutSet(filesInQueue[0], true);
     setFilesInQueue([...filesInQueue.slice(1)]);
+    transform_controls.detach();
+    const viewer_buttons = document.getElementsByClassName(
+      'ViewerWindow-buttons',
+    )[0];
+    viewer_buttons.style.display = 'none';
   }
 
   const open_load_set_modal = () => {
@@ -624,11 +659,13 @@ export default function LayoutPanel(props) {
         </div>
         <div className="LayoutList-container">
           <LayoutList
+            scene_node={sceneTree}
             layouts={layouts}
             setLayouts={setLayouts}
             swapLayouts={swapLayouts}
             layoutProperties={layoutProperties}
             setLayoutProperties={setLayoutProperties}
+            transform_controls={transform_controls}
             setTransformControls={set_transform_controls}
             delete_layout={delete_layout}
             handleSliderMouseDown={handleSliderMouseDown}
