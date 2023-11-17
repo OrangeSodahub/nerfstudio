@@ -200,8 +200,10 @@ function LayoutList(props) {
 
 export default function LayoutPanel(props) {
   const categories = [
-    'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
-    'door', 'window', 'bokshelf', 'counter', 'desk']
+    'wall', 'ceiling', 'floor', 'cabinet', 'bed', 'chair', 'sofa',
+    'table', 'door', 'window', 'bookshelf', 'counter', 'desk',
+    'curtain', 'refrigerator', 'television', 'whiteboard', 'toilet',
+    'sink', 'bathtub', 'doorframe']
 
   const sceneTree = props.sceneTree;
   const viser_websocket = React.useContext(ViserWebSocketContext);

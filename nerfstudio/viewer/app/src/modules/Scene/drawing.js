@@ -167,11 +167,28 @@ export function drawCameras(cameras): Record<number, THREE.Object3D> {
 export function drawLayout(category: String, init_opacity: Number,
                                              init_size?: THREE.Vector3,
                                              init_pos?: THREE.Vector3): THREE.Object3D {
-
   const categorySettings = {
-    wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffffff },
-    floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0xff0000 },
-    cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x00ff00 },
+    wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xb0e0e6 },
+    ceiling: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x88b8c8 },
+    floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0xffc0cb },
+    cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffe4c4 },
+    bed: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffdab9 },
+    chair: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf0e68c },
+    sofa: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffebcd },
+    table: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfffacd },
+    door: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf08080 },
+    window: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff6347 },
+    bookshelf: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff4500 },
+    counter: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xc6fff0 },
+    desk: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xd2b6c6 },
+    curtain: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffa500 },
+    refrigerator: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffd700 },
+    television: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfffaf0 },
+    whiteboard: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffffe0 },
+    toilet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x9acd32 },
+    sink: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xadd8e6 },
+    bathtub: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xec8c38 },
+    doorframe: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x87cefa },
   };
 
   const {size: defaultSize, color} = categorySettings[category];
