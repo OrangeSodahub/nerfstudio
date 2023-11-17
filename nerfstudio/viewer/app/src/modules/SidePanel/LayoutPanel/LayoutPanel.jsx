@@ -393,7 +393,7 @@ export default function LayoutPanel(props) {
     setSliderChangeState(false);
     setLayoutsAdded(false);
   };
-  
+
   const get_layout_set = () => {
     setLayoutsAdded(false);
     const bboxes = [];
@@ -409,27 +409,27 @@ export default function LayoutPanel(props) {
       bboxes.push(bbox);
       labels.push(label);
     }
-  
+
     const layout_set_object = {
       bboxes,
       labels,
     };
     return layout_set_object;
   };
-  
+
   const export_layout_set = () => {
     setLayoutsAdded(false);
     // export the layout set
     sendWebsocketMessage(viser_websocket, { type: 'SaveCheckpointMessage' });
     const layout_set_object = get_layout_set();
-  
+
     const json = JSON.stringify(layout_set_object, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const href = URL.createObjectURL(blob);
-  
+
     const link = document.createElement('a');
     link.href = href;
-  
+
     const filname = 'layout_set_json';
     link.download = filname;
     document.body.appendChild(link);
@@ -472,7 +472,7 @@ export default function LayoutPanel(props) {
     setId(id + bboxes.length);
     setLayoutsAdded(false);
   };
-  
+
   const uploadLayoutSet = (e) => {
     const fileUpload = e.target.files[0];
     
@@ -485,7 +485,7 @@ export default function LayoutPanel(props) {
     fr.readAsText(fileUpload);
     setLayoutsAdded(false);
   };
-  
+
   const open_load_set_modal = () => {
     sendWebsocketMessage(viser_websocket, { type: 'LayoutSetOptionsRequest' });
     setLoadSetModalOpen(true);
