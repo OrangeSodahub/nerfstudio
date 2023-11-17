@@ -41,6 +41,11 @@ export default function LoadSetModal(props: LoadSetModalProps) {
     hiddenFileInput.current.click();
   };
 
+  const hiddenFolderInput = React.useRef(null);
+  const handleFolderUploadClick = () => {
+    hiddenFolderInput.current.click();
+  };
+
   // react state
 
   const handleClose = () => setOpen(false);
@@ -54,6 +59,11 @@ export default function LoadSetModal(props: LoadSetModalProps) {
   };
 
   const handleFileInput = (event) => {
+    uploadLayoutSet(event);
+    handleClose();
+  };
+
+  const handleFolderInput = (event) => {
     uploadLayoutSet(event);
     handleClose();
   };
@@ -127,14 +137,35 @@ export default function LoadSetModal(props: LoadSetModalProps) {
                   startIcon={<FileUpload />}
                   onClick={handleFileUploadClick}
                 >
-                  Upload Layout Set
+                  Upload File(s)
                   <input
                     type="file"
                     accept=".json"
-                    name="Layout Set"
+                    name="Layout Set File(s)"
                     onChange={handleFileInput}
+                    multiple={true}
                     hidden
                     ref={hiddenFileInput}
+                  />
+                </Button>
+              </div>
+              <div className="LoadSetModal-upload_button">
+                <Button
+                  sx={{ width: '60%' }}
+                  variant="outlined"
+                  size="medium"
+                  startIcon={<FileUpload />}
+                  onClick={handleFolderUploadClick}
+                >
+                  Upload Folder
+                  <input
+                    type="file"
+                    name="Layout Set Foler"
+                    onChange={handleFolderInput}
+                    multiple={true}
+                    webkitdirectory="true"
+                    hidden
+                    ref={hiddenFolderInput}
                   />
                 </Button>
               </div>
