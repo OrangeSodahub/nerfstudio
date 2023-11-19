@@ -199,11 +199,18 @@ function LayoutList(props) {
 }
 
 export default function LayoutPanel(props) {
+  // scannetpp
   const categories = [
     'wall', 'ceiling', 'floor', 'cabinet', 'bed', 'chair', 'sofa',
     'table', 'door', 'window', 'bookshelf', 'counter', 'desk',
     'curtain', 'refrigerator', 'television', 'whiteboard', 'toilet',
     'sink', 'bathtub', 'doorframe']
+  // scannet
+  // const categories = [
+  //   'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
+  //   'door', 'window', 'bookshelf', 'counter', 'desk', 'curtain',
+  //   'refrigerator', 'television', 'showercurtain', 'whiteboard',
+  //   'toilet', 'sink', 'bathtub', 'garbagebin', 'doorframe']
 
   const sceneTree = props.sceneTree;
   const viser_websocket = React.useContext(ViserWebSocketContext);

@@ -168,8 +168,8 @@ export function drawLayout(category: String, init_opacity: Number,
                                              init_size?: THREE.Vector3,
                                              init_pos?: THREE.Vector3): THREE.Object3D {
   const categorySettings = {
+    // scannet and scannetpp
     wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xb0e0e6 },
-    ceiling: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x88b8c8 },
     floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0xffc0cb },
     cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffe4c4 },
     bed: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffdab9 },
@@ -189,6 +189,11 @@ export function drawLayout(category: String, init_opacity: Number,
     sink: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xadd8e6 },
     bathtub: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xec8c38 },
     doorframe: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x87cefa },
+    // scannetpp
+    ceiling: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x88b8c8 },
+    // scannet
+    showercurtain: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffb8c8 },
+    garbagebin: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x9ffd32 },
   };
 
   const {size: defaultSize, color} = categorySettings[category];
