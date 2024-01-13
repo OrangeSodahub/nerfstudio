@@ -163,3 +163,57 @@ export function drawCameras(cameras): Record<number, THREE.Object3D> {
   }
   return cameraObjects;
 }
+
+export function drawLayout(category: String, init_opacity: Number,
+                                             init_size?: THREE.Vector3,
+                                             init_pos?: THREE.Vector3): THREE.Object3D {
+  const categorySettings = {
+    // scannet and scannetpp
+    wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xb0e0e6 },
+    floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0xffc0cb },
+    cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffe4c4 },
+    bed: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffdab9 },
+    chair: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf0e68c },
+    sofa: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffebcd },
+    table: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfffacd },
+    door: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf08080 },
+    window: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff6347 },
+    bookshelf: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff4500 },
+    counter: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xc6fff0 },
+    desk: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xd2b6c6 },
+    curtain: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffa500 },
+    refrigerator: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffd700 },
+    television: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfffaf0 },
+    whiteboard: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffffe0 },
+    toilet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x9acd32 },
+    sink: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xadd8e6 },
+    bathtub: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xec8c38 },
+    doorframe: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x87cefa },
+    // scannetpp
+    ceiling: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x88b8c8 },
+    // scannet
+    showercurtain: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffb8c8 },
+    garbagebin: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x9ffd32 },
+  };
+
+  const {size: defaultSize, color} = categorySettings[category];
+  const size = init_size ?? defaultSize;
+  const position = init_pos ?? new THREE.Vector3(0, 0, size.z / 2 - 1);
+  const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: init_opacity });
+  const layoutObject = new THREE.Mesh(geometry, material);
+
+  const edges = new THREE.EdgesGeometry(geometry);
+  const edgesMaterial = new THREE.LineBasicMaterial({ color, transparent: false });
+  const edgeMesh = new THREE.LineSegments(edges, edgesMaterial);
+
+  layoutObject.add(edgeMesh);
+
+  // add `size` attribute in order to change them
+  layoutObject.originalSize = size.clone();
+  layoutObject.size = size;
+  layoutObject.opacity = 0.6;
+  layoutObject.position.set(position.x, position.y, position.z);
+
+  return layoutObject;
+}

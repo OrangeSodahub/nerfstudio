@@ -1,6 +1,13 @@
 import { split_path } from './utils';
 
 const initialState = {
+  // the layout state
+  layoutState: {
+    isConfiguring: true,
+    numLayouts: 0,
+    classLayouts: null,
+  },
+  
   // the websocket connection state
   websocketState: {
     isConnected: false,
@@ -14,6 +21,9 @@ const initialState = {
   render_img: null, // The rendered images
 
   show_export_box: false, // whether to show the export box
+  show_layout_box: false, // whether to show the layout box
+  show_control_box: false, // whether to show the control box
+  show_render_box: false, // whether to show the render box
 
   custom_gui: {
     guiNames: [],
@@ -66,6 +76,7 @@ const initialState = {
   sceneState: {
     sceneBox: null,
     cameras: null,
+    layouts: null,
   },
 };
 

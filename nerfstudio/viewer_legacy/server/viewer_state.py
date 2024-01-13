@@ -80,7 +80,7 @@ class ViewerLegacyState:
         config: cfg.ViewerConfig,
         log_filename: Path,
         datapath: Path,
-        pipeline: Pipeline,
+        pipeline: Optional[Pipeline] = None,
         trainer: Optional[Trainer] = None,
         train_lock: Optional[threading.Lock] = None,
     ):
@@ -109,7 +109,7 @@ class ViewerLegacyState:
 
         CONSOLE.print(Panel(table, title="[bold][yellow]Viewer[/bold]", expand=False))
 
-        self.include_time = self.pipeline.datamanager.includes_time
+        self.include_time = self.pipeline.datamanager.includes_time if self.pipeline else False
 
         # viewer specific variables
         self.output_type_changed = True
@@ -346,8 +346,8 @@ class ViewerLegacyState:
 
     def init_scene(
         self,
-        train_dataset: InputDataset,
-        train_state: Literal["training", "paused", "completed"],
+        train_dataset: Optional[InputDataset] = None,
+        train_state: Optional[Literal["training", "paused", "completed", "unavailable"]] = "unavailable",
         eval_dataset: Optional[InputDataset] = None,
     ) -> None:
         """Draw some images and the scene aabb in the viewer.
@@ -362,39 +362,44 @@ class ViewerLegacyState:
             export_path_name=self.log_filename.parent.stem,
         )
 
-        # total num of images
-        num_images = len(train_dataset)
-        if eval_dataset is not None:
-            num_images += len(eval_dataset)
+        # Only when configuring layouts, no train dataset
+        if train_dataset is not None:
 
-        # draw the training cameras and images
-        image_indices = self._pick_drawn_image_idxs(num_images)
-        for idx in image_indices[image_indices < len(train_dataset)].tolist():
-            image = train_dataset[idx]["image"]
-            bgr = image[..., [2, 1, 0]]
-            camera_json = train_dataset.cameras.to_json(camera_idx=idx, image=bgr, max_size=100)
-            self.viser_server.add_dataset_image(idx=f"{idx:06d}", json=camera_json)
+            # total num of images
+            num_images = len(train_dataset)
+            if eval_dataset is not None:
+                num_images += len(eval_dataset)
 
-        # draw the eval cameras and images
-        if eval_dataset is not None:
-            image_indices = image_indices[image_indices >= len(train_dataset)] - len(train_dataset)
-            for idx in image_indices.tolist():
-                image = eval_dataset[idx]["image"]
+            # draw the training cameras and images
+            image_indices = self._pick_drawn_image_idxs(num_images)
+            for idx in image_indices[image_indices < len(train_dataset)].tolist():
+                image = train_dataset[idx]["image"]
                 bgr = image[..., [2, 1, 0]]
-                # color the eval image borders red
-                # TODO: color the threejs frustum instead of changing the image itself like we are doing here
-                t = int(min(image.shape[:2]) * 0.1)  # border thickness as 10% of min height or width resolution
-                bc = torch.tensor((0, 0, 1.0))
-                bgr[:t, :, :] = bc
-                bgr[-t:, :, :] = bc
-                bgr[:, -t:, :] = bc
-                bgr[:, :t, :] = bc
+                camera_json = train_dataset.cameras.to_json(camera_idx=idx, image=bgr, max_size=100)
+                self.viser_server.add_dataset_image(idx=f"{idx:06d}", json=camera_json)
 
-                camera_json = eval_dataset.cameras.to_json(camera_idx=idx, image=bgr, max_size=100)
-                self.viser_server.add_dataset_image(idx=f"{idx+len(train_dataset):06d}", json=camera_json)
+            # draw the eval cameras and images
+            if eval_dataset is not None:
+                image_indices = image_indices[image_indices >= len(train_dataset)] - len(train_dataset)
+                for idx in image_indices.tolist():
+                    image = eval_dataset[idx]["image"]
+                    bgr = image[..., [2, 1, 0]]
+                    # color the eval image borders red
+                    # TODO: color the threejs frustum instead of changing the image itself like we are doing here
+                    t = int(min(image.shape[:2]) * 0.1)  # border thickness as 10% of min height or width resolution
+                    bc = torch.tensor((0, 0, 1.0))
+                    bgr[:t, :, :] = bc
+                    bgr[-t:, :, :] = bc
+                    bgr[:, -t:, :] = bc
+                    bgr[:, :t, :] = bc
+
+                    camera_json = eval_dataset.cameras.to_json(camera_idx=idx, image=bgr, max_size=100)
+                    self.viser_server.add_dataset_image(idx=f"{idx+len(train_dataset):06d}", json=camera_json)
 
         # draw the scene box (i.e., the bounding box)
-        self.viser_server.update_scene_box(train_dataset.scene_box)
+        # NOTE: hard code here, pay attention the scene_box when train_dataset is not given, only when configuring layouts
+        scene_box = train_dataset.scene_box if train_dataset is not None else SceneBox(aabb=torch.tensor([[-1, -1, -1], [1, 1, 1]]))
+        self.viser_server.update_scene_box(scene_box)
 
         # set the initial state whether to train or not
         self.train_btn_state = train_state

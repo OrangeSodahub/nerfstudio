@@ -299,6 +299,10 @@ export default function ViewerWindow(props) {
   const isWebsocketConnected = useSelector(
     (state) => state.websocketState.isConnected,
   );
+  // when launch the layout configuring
+  const isLayoutConfiguring = useSelector(
+    (state) => state.layoutState.isConfiguring,
+  )
   useEffect(() => {
     if (isWebsocketConnected) {
       sendThrottledCameraMessage({
@@ -361,7 +365,7 @@ export default function ViewerWindow(props) {
   return (
     <>
       <div className="RenderWindow">
-        <div id="not-connected-overlay" hidden={isWebsocketConnected}>
+        <div id="not-connected-overlay" hidden={isWebsocketConnected || isLayoutConfiguring}>
           <div id="not-connected-overlay-text">Renderer Disconnected</div>
         </div>
       </div>

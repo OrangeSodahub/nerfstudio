@@ -36,9 +36,13 @@
 <p align="center"> A collaboration friendly studio for NeRFs </p>
 
 <p align="center">
+    <a href="https://OrangeSodahub.github.io/nerfstudio" style="color: red !important; border-bottom: 1px solid red !important;">
+    <strong><font color="red"> [The Viewer has been modified] </font></strong></a></p>
+
+<p align="center">
     <a href="https://docs.nerf.studio">
         <img alt="documentation" src="https://user-images.githubusercontent.com/3310961/194022638-b591ce16-76e3-4ba6-9d70-3be252b36084.png" width="150"></a>
-    <a href="https://viewer.nerf.studio/">
+    <a href="https://OrangeSodahub.github.io/nerfstudio/">
         <img alt="viewer" src="https://user-images.githubusercontent.com/3310961/194022636-a9efb85a-14fd-4002-8ed4-4ca434898b5a.png" width="150"></a>
     <a href="https://colab.research.google.com/github/nerfstudio-project/nerfstudio/blob/main/colab/demo.ipynb">
         <img alt="colab" src="https://raw.githubusercontent.com/nerfstudio-project/nerfstudio/main/docs/_static/imgs/readme_colab.png" width="150"></a>

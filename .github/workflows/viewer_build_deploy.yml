@@ -2,9 +2,9 @@ name: Viewer Build and Deploy.
 
 on:
   push:
-    branches: [main]
+    branches: [layout]
   pull_request:
-    branches: [main]
+    branches: [layout]
 
 jobs:
   build:
@@ -41,9 +41,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    env:
-      SSH_KEY: ${{secrets.SSH_KEY}}
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8.12
@@ -71,27 +68,8 @@ jobs:
         shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
 
-      # TODO: detect file or scheme changes of the viewer_legacy and only
-      # increment the version.txt file when there is a change.
-      # Update the version.txt code and push to master when things change.
-      # https://github.com/marketplace/actions/changed-files
-      # - name: Run changed-files with defaults on the dir1
-      #   id: changed-files-for-dir1
-      #   uses: tj-actions/changed-files@v29.0.3
-      #   with:
-      #     path: nerfstudio/viewer_legacy/app
-
-      # - name: List all added files in dir1
-      #   run: |
-      #     for file in ${{ steps.changed-files-for-dir1.outputs.modified_files }}; do
-      #       echo "$file was modified"
-      #     done
-
-      - run: |
-          python ./nerfstudio/viewer_legacy/app/run_deploy.py \
-            --branch-name ${{ env.BRANCH_NAME }} \
-            --ssh-key-string "$SSH_KEY" \
-            --local-folder ./nerfstudio/viewer_legacy/app/build \
-            --package-json-filename ./nerfstudio/viewer_legacy/app/package.json \
-            --increment-version "False"
-      - run: cat ~/.ssh/config
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./nerfstudio/viewer_legacy/app/build

@@ -34,6 +34,7 @@
       { "extensions": [".js", ".jsx", ".ts", ".tsx"] }
     ],
     "unused-imports/no-unused-imports-ts": 2,
+    "react-hooks/exhaustive-deps": "off",
     "import/extensions": [
       "error",
       "ignorePackages",

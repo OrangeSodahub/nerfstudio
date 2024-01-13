@@ -26,14 +26,6 @@ import torch
 
 from nerfstudio.data.scene_box import SceneBox
 from nerfstudio.models.base_model import Model
-from nerfstudio.utils.io import load_from_json
-
-
-def get_viewer_version() -> str:
-    """Return the version of the viewer."""
-    json_filename = os.path.join(os.path.dirname(__file__), "../app/package.json")
-    version = load_from_json(Path(json_filename))["version"]
-    return version
 
 
 def get_viewer_url(websocket_port: int) -> str:
@@ -44,9 +36,9 @@ def get_viewer_url(websocket_port: int) -> str:
     Returns:
         URL to the viewer
     """
-    version = get_viewer_version()
     websocket_url = f"ws://localhost:{websocket_port}"
-    return f"https://viewer.nerf.studio/versions/{version}/?websocket_url={websocket_url}"
+    # NOTE: static webpage is hosted at OrangeSodahub/nerfstudio branch gh-pages
+    return f"https://orangesodahub.github.io/nerfstudio/?websocket_url={websocket_url}"
 
 
 class IOChangeException(Exception):
