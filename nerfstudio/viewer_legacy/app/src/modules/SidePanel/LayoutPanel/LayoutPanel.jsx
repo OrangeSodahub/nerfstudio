@@ -189,7 +189,7 @@ function LayoutList(props) {
               onMouseDown={handleSliderMouseDown}
               aria-labelledby={`size-x-slider-${index}`}
               valueLabelDisplay="auto"
-              min={0.1} max={2} step={0.02}
+              min={0.1} max={50} step={0.02}
             />
             <Typography style={{ marginLeft: '10px' }}>{(layout.size.x / layout.originalSize.x).toFixed(1)}</Typography>
           </div>
@@ -202,7 +202,7 @@ function LayoutList(props) {
               onMouseDown={handleSliderMouseDown}
               aria-labelledby={`size-y-slider-${index}`}
               valueLabelDisplay="auto"
-              min={0.1} max={2} step={0.02}
+              min={0.1} max={50} step={0.02}
             />
             <Typography style={{ marginLeft: '10px' }}>{(layout.size.y / layout.originalSize.y).toFixed(1)}</Typography>
           </div>
@@ -215,7 +215,7 @@ function LayoutList(props) {
               onMouseDown={handleSliderMouseDown}
               aria-labelledby={`size-z-slider-${index}`}
               valueLabelDisplay="auto"
-              min={0.1} max={2} step={0.02}
+              min={0.1} max={50} step={0.02}
             />
             <Typography style={{ marginLeft: '10px' }}>{(layout.size.z / layout.originalSize.z).toFixed(1)}</Typography>
           </div>
@@ -227,18 +227,14 @@ function LayoutList(props) {
 }
 
 export default function LayoutPanel(props) {
-  // scannetpp
+  // hypersim (nyu40)
   const categories = [
-    'wall', 'ceiling', 'floor', 'cabinet', 'bed', 'chair', 'sofa',
-    'table', 'door', 'window', 'bookshelf', 'counter', 'desk',
-    'curtain', 'refrigerator', 'television', 'whiteboard', 'toilet',
-    'sink', 'bathtub', 'doorframe']
-  // scannet
-  // const categories = [
-  //   'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
-  //   'door', 'window', 'bookshelf', 'counter', 'desk', 'curtain',
-  //   'refrigerator', 'television', 'showercurtain', 'whiteboard',
-  //   'toilet', 'sink', 'bathtub', 'garbagebin', 'doorframe']
+    'unlabeled', 'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa',
+    'table', 'door', 'window', 'bookshelf', 'picture', 'counter', 'blinds',
+    'desk', 'shelves', 'curtain', 'dresser', 'pillow', 'mirror', 'floormat',
+    'clothes', 'ceiling', 'books', 'refrigerator', 'television', 'paper',
+    'towel', 'showercurtain', 'box', 'whiteboard', 'person', 'nightstand', 'toilet',
+    'sink', 'lamp', 'bathtub', 'bag', 'otherstructure', 'otherfurniture', 'otherprop']
 
   const sceneTree = props.sceneTree;
   const viser_websocket = React.useContext(ViserWebSocketContext);
@@ -267,6 +263,7 @@ export default function LayoutPanel(props) {
   };
   const [load_set_modal_open, setLoadSetModalOpen] = React.useState(false);
   const [currentOpacity, setCurrentOpacity] = React.useState(0.6);
+  const [currentTheta, setCurrentTheta] = React.useState(0.0);
   const [sliderChangeState, setSliderChangeState] = React.useState(false);
   const [layoutsAdded, setLayoutsAdded] = React.useState(false);
   const [filesInQueue, setFilesInQueue] = React.useState([]);
@@ -296,7 +293,7 @@ export default function LayoutPanel(props) {
     }));
     const cat_id = categories.findIndex(item => item === selectedCategory.toLowerCase());
 
-    const new_layout = drawLayout(selectedCategory, currentOpacity);
+    const new_layout = drawLayout(selectedCategory, currentOpacity, currentTheta);
     const new_layout_properties = new Map();
     new_layout.properties = new_layout_properties;
     new_layout_properties.set('NAME', `idx.${id}`);
@@ -451,6 +448,7 @@ export default function LayoutPanel(props) {
     setLayoutsAdded(false);
     const bboxes = [];
     const labels = [];
+    const thetas = [];
   
     for (let i = 0; i < layouts.length; i += 1) {
       const layout = layouts[i];
@@ -459,13 +457,16 @@ export default function LayoutPanel(props) {
         layout.size.x, layout.size.y, layout.size.z
       ];
       const label = layout.properties.get('CAT_ID');
+      const theta = layout.rotation.z * 180 / Math.PI - 90;
       bboxes.push(bbox);
       labels.push(label);
+      thetas.push(theta);
     }
 
     const layout_set_object = {
       bboxes,
       labels,
+      thetas,
     };
     return layout_set_object;
   };
@@ -496,11 +497,12 @@ export default function LayoutPanel(props) {
     const new_properties = delete_first ? new Map() : new Map(layoutProperties);
     let newCategoryCounts = new Map();
 
-    const { bboxes, labels } = layout_set_object;
+    const { bboxes, labels, thetas } = layout_set_object;
     
     for (let i = 0; i < bboxes.length; i += 1) {
       const bbox = bboxes[i];
       const label = labels[i];
+      const theta = thetas[i];
 
       const position = new THREE.Vector3(...bbox.slice(0, 3));
       const size = new THREE.Vector3(...bbox.slice(3, 6));
@@ -508,7 +510,7 @@ export default function LayoutPanel(props) {
 
       newCategoryCounts = {...newCategoryCounts, [category]: (newCategoryCounts[category] || 0) + 1};
       const cat_id = categories.findIndex(item => item === category.toLowerCase());
-      const new_layout = drawLayout(category, currentOpacity, size, position);
+      const new_layout = drawLayout(category, currentOpacity, theta, size, position);
       const new_layout_properties = new Map();
       const new_id = id + i;
       new_layout.properties = new_layout_properties;

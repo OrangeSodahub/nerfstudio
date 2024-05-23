@@ -165,34 +165,51 @@ export function drawCameras(cameras): Record<number, THREE.Object3D> {
 }
 
 export function drawLayout(category: String, init_opacity: Number,
+                                             init_theta?: Number,
                                              init_size?: THREE.Vector3,
                                              init_pos?: THREE.Vector3): THREE.Object3D {
   const categorySettings = {
-    // scannet and scannetpp
-    wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xb0e0e6 },
-    floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0xffc0cb },
-    cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffe4c4 },
-    bed: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffdab9 },
-    chair: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf0e68c },
-    sofa: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffebcd },
-    table: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfffacd },
-    door: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf08080 },
-    window: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff6347 },
-    bookshelf: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff4500 },
-    counter: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xc6fff0 },
-    desk: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xd2b6c6 },
-    curtain: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffa500 },
-    refrigerator: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffd700 },
-    television: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfffaf0 },
-    whiteboard: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffffe0 },
-    toilet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x9acd32 },
-    sink: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xadd8e6 },
-    bathtub: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xec8c38 },
-    doorframe: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x87cefa },
-    // scannetpp
-    ceiling: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x88b8c8 },
-    // scannet
-    showercurtain: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xffb8c8 },
+    unlabeled: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x9ffd32 },
+    wall: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0xaec7e8 },
+    floor: { size: new THREE.Vector3(1, 1, 0.1), color: 0x98df8a },
+    cabinet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x1ff77b4 },
+    bed: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xffbb78 },
+    chair: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xbcbd22 },
+    sofa: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x8c564b },
+    table: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff9896 },
+    door: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xfd62728 },
+    window: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xc5b0d5 },
+    bookshelf: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x9467bd },
+    picture: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xc49c94 },
+    counter: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x17becf },
+    blinds: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xb24c4c },
+    desk: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xf7b6d2 },
+    shelves: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x42bc66 },
+    curtain: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xdbdb8d },
+    dresser: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x8c39c5 },
+    pillow: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xcab934 },
+    mirror: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x33b0cb },
+    floormat: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xc83683 },
+    clothes: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x5cc13d },
+    ceiling: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x4e47b7 },
+    books: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xac7252 },
+    refrigerator: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xff7f0e },
+    television: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x5ba38a },
+    paper: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x99629c },
+    towel: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x8c9965 },
+    showercurtain: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x9edae5 },
+    box: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x647d9a },
+    whiteboard: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xb27f87 },
+    person: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x78b980 },
+    nightstand: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x926fc2 },
+    toilet: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x2ca02c },
+    sink: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x708090 },
+    lamp: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x60cfd1 },
+    bathtub: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xe377c2 },
+    bag: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0xd55cb0 },
+    otherstructure: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x5e6ad3 },
+    otherfurniture: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x5254a3 },
+    otherprop: { size: new THREE.Vector3(0.2, 0.3, 0.5), color: 0x645590 },
     garbagebin: { size: new THREE.Vector3(0.1, 1, 0.6), color: 0x9ffd32 },
   };
 
@@ -214,6 +231,7 @@ export function drawLayout(category: String, init_opacity: Number,
   layoutObject.size = size;
   layoutObject.opacity = 0.6;
   layoutObject.position.set(position.x, position.y, position.z);
+  layoutObject.rotation.set(0, 0, Math.PI / 180 * (init_theta + 90));
 
   return layoutObject;
 }
