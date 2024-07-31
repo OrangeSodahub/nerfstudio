@@ -263,7 +263,6 @@ export default function LayoutPanel(props) {
   };
   const [load_set_modal_open, setLoadSetModalOpen] = React.useState(false);
   const [currentOpacity, setCurrentOpacity] = React.useState(0.6);
-  const [currentTheta, setCurrentTheta] = React.useState(0.0);
   const [sliderChangeState, setSliderChangeState] = React.useState(false);
   const [layoutsAdded, setLayoutsAdded] = React.useState(false);
   const [filesInQueue, setFilesInQueue] = React.useState([]);
