@@ -292,7 +292,7 @@ export default function LayoutPanel(props) {
     }));
     const cat_id = categories.findIndex(item => item === selectedCategory.toLowerCase());
 
-    const new_layout = drawLayout(selectedCategory, currentOpacity, currentTheta);
+    const new_layout = drawLayout(selectedCategory, currentOpacity, 0.0);
     const new_layout_properties = new Map();
     new_layout.properties = new_layout_properties;
     new_layout_properties.set('NAME', `idx.${id}`);
